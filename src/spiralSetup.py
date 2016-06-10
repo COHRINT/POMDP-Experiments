@@ -1,8 +1,28 @@
+'''
+******************************************
+File: spiralSetup.py
+Written By: Luke Burks
+May 2016
+
+Contains tools for creating .pomdp files
+to be used to calculate simple spiral 
+policies. 
+******************************************
+'''
+
+__author__ = "Luke Burks"
+__copyright__ = "Copyright 2016, Cohrint"
+__license__ = "GPL"
+__version__ = "1.0"
+__maintainer__ = "Luke Burks"
+__email__ = "clburks9@gmail.com"
+__status__ = "Development"
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
 from math import sqrt
-
 
 
 
