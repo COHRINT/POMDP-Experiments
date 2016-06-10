@@ -13,7 +13,7 @@ simplified version of the tag avoid problem
 __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __license__ = "GPL"
-__version__ = "1.0"
+__version__ = "0.1"
 __maintainer__ = "Luke Burks"
 __email__ = "clburks9@gmail.com"
 __status__ = "Development"
@@ -43,6 +43,7 @@ def distance(x1,y1,x2,y2):
 	return sqrt(a+b); 
 
 def normalize(a):
+
 	Suma = sum(a); 
 	for i in range(0,len(a)):
 		a[i] = a[i]/Suma; 
@@ -107,42 +108,47 @@ def initialize(include_walls = False):
 			if(cx1-cx2 == 1):
 				#left
 				if(distance(rx2,ry2,cx1,cy1) > distance(rx1,ry1,cx1,cy1)):
-					px[i][0][j] = .4; 
+					px[i][0][j] = .5; 
 				elif(distance(rx2,ry2,cx1,cy1) == distance(rx1,ry1,cx1,cy1)):
-					px[i][0][j] = .2; 
+					px[i][0][j] = .1; 
 			elif(cx1-cx2 == -1):
 				#right
 				if(distance(rx2,ry2,cx1,cy1) > distance(rx1,ry1,cx1,cy1)):
-					px[i][1][j] = .4; 
+					px[i][1][j] = .5; 
 				elif(distance(rx2,ry2,cx1,cy1) == distance(rx1,ry1,cx1,cy1)):
-					px[i][1][j] = .2;
+					px[i][1][j] = .1;
 			elif(cy1-cy2 == 1):
 				#up
 				if(distance(rx2,ry2,cx1,cy1) > distance(rx1,ry1,cx1,cy1)):
-					px[i][2][j] = .4; 
+					px[i][2][j] = .5; 
 				elif(distance(rx2,ry2,cx1,cy1) == distance(rx1,ry1,cx1,cy1)):
-					px[i][2][j] = .2;
+					px[i][2][j] = .1;
 			elif(cy1-cy2 == -1):
 				#down
 				if(distance(rx2,ry2,cx1,cy1) > distance(rx1,ry1,cx1,cy1)):
-					px[i][3][j] = .4; 
+					px[i][3][j] = .5; 
 				elif(distance(rx2,ry2,cx1,cy1) == distance(rx1,ry1,cx1,cy1)):
-					px[i][3][j] = .2;
+					px[i][3][j] = .1;
 			elif(cx1 == cx2 and cy1 == cy2):
 				#stay
 				if(distance(rx2,ry2,cx1,cy1) > distance(rx1,ry1,cx1,cy1)):
-					px[i][4][j] = .4; 
+					px[i][4][j] = .5; 
 				elif(distance(rx2,ry2,cx1,cy1) == distance(rx1,ry1,cx1,cy1)):
-					px[i][4][j] = .2;
+					px[i][4][j] = .1;
 
 
 		#normalize transition matrixes
+		#and make sure every action leads somewhere
+		#if it leads nowhere, just have it stay put
 		for i in range(0,numStates):
 			for a in range(0,5):
+				
 				if(sum(px[i][a])==0):
 					px[i][a][i] = 1; 
 				else:
 					px[i][a] = normalize(px[i][a]); 
+
+				px[i][a] = normalize(px[i][a]); 
 
 
 		#Set observations: you can detect a robber if he is right next to you and 
@@ -174,9 +180,9 @@ def generateFile(include_walls = True):
 
 	print("Initializing Grid"); 
 	if(include_walls == True):
-		SFile = open ("./SARSOPTests/TagAvoidWalls100.pomdp","w"); 
+		SFile = open ("../SARSOPTests/TagAvoidWalls100.pomdp","w"); 
 	else:
-		SFile = open ("./SARSOPTests/TagAvoidEmpty100.pomdp","w"); 
+		SFile = open ("../SARSOPTests/TagAvoidEmpty100.pomdp","w"); 
 	num = 100*100; 
 	[p,z,r] = initialize(include_walls); 
 
@@ -191,6 +197,10 @@ def generateFile(include_walls = True):
 	print>>SFile,"states: " + str(num)
 	print>>SFile,"observations: " + str(num)
 
+	'''
+	#start with cop at origin and robber at 5,5
+	print>>SFile,"start: 55"; 
+	'''
 
 
 	#moving left, 0
@@ -303,7 +313,8 @@ def convertToSimpleAlphas(als,fileName):
 
 
 
-generateFile(True); 
+generateFile(False); 
+
 
 #print(aToxy(121)); 
 #b = aToxy(121); 
