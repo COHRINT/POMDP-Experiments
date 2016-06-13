@@ -42,6 +42,7 @@ import roslib
 import numpy as np
 import sys
 import math
+import logging
 
 from discretePolicyTranslator import discretePolicyTranslator
 from geometry_msgs.msg import PoseStamped
@@ -54,7 +55,7 @@ from pose import Pose
 
 class goalHandler(object):
 
-	def __init__(self, filename,avoidance_type):
+	def __init__(self, filename, avoidance_type):
 		rospy.init_node('goal_sender')
 		self.stuck_buffer = 5
 		self.stuck_count = self.stuck_buffer
@@ -69,7 +70,9 @@ class goalHandler(object):
 		self.pub = rospy.Publisher('/deckard/move_base_simple/goal',PoseStamped,queue_size=10)
 		rospy.sleep(1) #<>TODO: figure out why the hell this works --> solves issue where robot would not move on initialization
 		rospy.Subscriber('/deckard/move_base/status',GoalStatusArray,self.callback)
-		print("initial position: " + str(self.pose._pose))
+		#print("initial position: " + str(self.pose._pose))
+
+		logging.basicConfig(filename='goalHandler_debug.log',level=logging.DEBUG)
 
 	def tf_exception_wrapper(self):
 		"""waits for transforms to become available and handles interim exceptions
@@ -84,10 +87,14 @@ class goalHandler(object):
 			except tf.LookupException as error:
 				tries = tries + 1
 				self.tf_exist = False
-				print("\nError!")
-				print(error)
-				print("Waiting for transforms to become available. Will retry 10 times.")
-				print("Try: " + str(tries) + "  Retrying in 2 seconds.\n")
+				# print("\nError!")
+				# print(error)
+				# print("Waiting for transforms to become available. Will retry 10 times.")
+				# print("Try: " + str(tries) + "  Retrying in 2 seconds.\n")
+				error_str = "\nError!\n" + error + "\nWaiting for transforms to become available. Will retry 10 times." \
+							+ "\nTry: " + str(tries) + " Retrying in 2 seconds.\n"
+				print(error_str)
+				logging.error(error_str)
 				rospy.sleep(2)
 
 	def callback(self,msg):
@@ -132,14 +139,15 @@ class goalHandler(object):
 
 		if self.stuck_count > 0: #check buffer
 			self.stuck_count += -1
-			print("stuck count "+str(self.stuck_count))
+			#print("stuck count "+str(self.stuck_count))
 			return False #return not stuck
 		self.stuck_count = self.stuck_buffer
 		self.stuck_distance = math.sqrt(((self.pose._pose[0] - self.last_position[0]) ** 2) + ((self.pose._pose[1] - self.last_position[1]) ** 2))
 		self.last_position = self.pose._pose
-		print(self.stuck_distance)
+		logging.debug('stuck distance: ' + str(self.stuck_distance))
 		if self.stuck_distance < 0.5:
 			print("Robot stuck; resending goal.")
+			logging.info("Robot stuck; resending goal.")
 			return True
 		else:
 			return False
@@ -149,11 +157,10 @@ class goalHandler(object):
 		"""
 
 		point = current_position
-		#if self.current_status == 3:
 		point[0] = round(point[0])
 		point[1] = round(point[1])
-		#print(self.dpt.getNextPose(point))
-		if stuck_flag and self.avoidance == '-b':
+		next_point = self.dpt.getNextPose
+		if stuck_flag and self.avoidance == '-b': #<>TODO: talk to luke about whether or not to keep any of the 'blocked' code
 			return self.dpt.getNextPose(point,stuck_flag)
 		elif stuck_flag and self.avoidance == '-s':
 			return self.dpt.getNextPose(point,False,stuck_flag)
@@ -171,31 +178,28 @@ class goalHandler(object):
 			return False
 		else:
 			self.goal_point = new_pose
-			print("sent goal: " + str(self.goal_point))
 
 		new_goal = PoseStamped()
 		new_goal.pose.position.x = self.goal_point[0]
 		new_goal.pose.position.y = self.goal_point[1]
 		new_goal.pose.position.z = self.goal_point[2]
 		theta = self.goal_point[3]
-		print("first theta: " + str(theta))
-		if theta > 120 + abs(self.pose._pose[2]) and stuck_flag:
-			theta = 90
-			print("second theta: " + str(theta))
 
 		if self.goal_point == [2,2,0,0]: #<>TODO: Fix this gross hack, it makes puppies cry
 			theta = 180
+
 		quat = tf.transformations.quaternion_from_euler(0,0,np.deg2rad(theta))
 		new_goal.pose.orientation.x = quat[0]
 		new_goal.pose.orientation.y = quat[1]
 		new_goal.pose.orientation.z = quat[2]
-		new_goal.pose.orientation.w = quat[3] #<>TODO change this to variable orientation so robot doesn't spin as it travels
+		new_goal.pose.orientation.w = quat[3]
 		#<>NOTE: random spinning that occured in gazebo sim does not occur in when run of physical robot
 
 		new_goal.header.stamp = rospy.Time.now()
 		new_goal.header.frame_id = 'map'
-		print(new_goal.pose.orientation)
+
 		self.pub.publish(new_goal)
+		logging.debug("sent goal: " + str(self.goal_point))
 
 if __name__ == "__main__":
 	gh = goalHandler(sys.argv[1],sys.argv[2])
