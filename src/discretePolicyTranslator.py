@@ -43,6 +43,8 @@ well as ints
 	Also included an option to get the goal Pose
 	that would result from taking the second best 
 	action. 
+1.1.2: removed blocked option in getNextPose(), 
+	secondary should be used instead
 ****************************************************
 '''
 
@@ -50,7 +52,7 @@ well as ints
 __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __license__ = "GPL"
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __maintainer__ = "Luke Burks"
 __email__ = "clburks9@gmail.com"
 __status__ = "Development"
@@ -60,6 +62,7 @@ __status__ = "Development"
 import random
 import numpy as np
 from math import sqrt
+
 
 
 
@@ -145,15 +148,14 @@ class discretePolicyTranslator():
 	#for blocked states, you can either send the next
 	#way point and let the robot navigate around, or
 	# you can send the second best action to take.
-	def getNextPose(self,pose,blocked=False,secondary = False):
-		if(blocked==False or secondary == True):
-			x = int(pose[0]); 
-			y = int(pose[1]); 
-		else:
-			x = self.goalX; 
-			y = self.goalY; 
+	def getNextPose(self,pose,secondary = False):
+	
+		x = int(pose[0]); 
+		y = int(pose[1]); 
+		
 			
 		belief = self.fakeBelief(x,y);  
+		
 		if(secondary == False):
 			action = self.getAction(self.alphas,belief); 
 		else:
@@ -295,6 +297,7 @@ if __name__ == "__main__":
 	for i in range(0,25):
 		post = pol.getNextPose(post,False,False); 
 		print(post); 
+		#t
 	'''
 	
 

@@ -13,7 +13,7 @@ simplified version of the tag avoid problem
 __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __license__ = "GPL"
-__version__ = "1.0"
+__version__ = "0.1"
 __maintainer__ = "Luke Burks"
 __email__ = "clburks9@gmail.com"
 __status__ = "Development"
@@ -43,6 +43,7 @@ def distance(x1,y1,x2,y2):
 	return sqrt(a+b); 
 
 def normalize(a):
+
 	Suma = sum(a); 
 	for i in range(0,len(a)):
 		a[i] = a[i]/Suma; 
@@ -61,6 +62,9 @@ def xyToa(x1,y1,x2,y2):
 
 def xyToa(c):
 	return c[0]*1000+c[1]*100+c[2]*10+c[3]; l
+
+
+
 
 def initialize(include_walls = False):
 
@@ -89,6 +93,11 @@ def initialize(include_walls = False):
 		for j in range(0,numStates):
 			[cx1,cy1,rx1,ry1] = aToxy(i); 
 			[cx2,cy2,rx2,ry2] = aToxy(j); 
+
+			if(i==0 and j==1):
+				print(aToxy(i));
+				print(aToxy(j)); 
+
 
 			#make sure all movements are within a ditance of 1
 			if(distance(cx1,cy1,cx2,cy2) > 1 or distance(rx1,ry1,rx2,ry2) > 1):
@@ -137,12 +146,17 @@ def initialize(include_walls = False):
 
 
 		#normalize transition matrixes
+		#and make sure every action leads somewhere
+		#if it leads nowhere, just have it stay put
 		for i in range(0,numStates):
 			for a in range(0,5):
+				
 				if(sum(px[i][a])==0):
 					px[i][a][i] = 1; 
 				else:
 					px[i][a] = normalize(px[i][a]); 
+
+				px[i][a] = normalize(px[i][a]); 
 
 
 		#Set observations: you can detect a robber if he is right next to you and 
@@ -174,9 +188,9 @@ def generateFile(include_walls = True):
 
 	print("Initializing Grid"); 
 	if(include_walls == True):
-		SFile = open ("./SARSOPTests/TagAvoidWalls100.pomdp","w"); 
+		SFile = open ("../SARSOPTests/TagAvoidWalls100.pomdp","w"); 
 	else:
-		SFile = open ("./SARSOPTests/TagAvoidEmpty100.pomdp","w"); 
+		SFile = open ("../SARSOPTests/TagAvoidEmpty100.pomdp","w"); 
 	num = 100*100; 
 	[p,z,r] = initialize(include_walls); 
 
@@ -191,6 +205,10 @@ def generateFile(include_walls = True):
 	print>>SFile,"states: " + str(num)
 	print>>SFile,"observations: " + str(num)
 
+	'''
+	#start with cop at origin and robber at 5,5
+	print>>SFile,"start: 55"; 
+	'''
 
 
 	#moving left, 0
@@ -303,9 +321,16 @@ def convertToSimpleAlphas(als,fileName):
 
 
 
-generateFile(True); 
+
+
+#generateFile(False); 
+
 
 #print(aToxy(121)); 
 #b = aToxy(121); 
-#print(xyToa(b))
+[px,pz,r] = initialize(True); 
+a = aToxy(px[0][1].index(.2));
+b = aToxy(px[0][1].index(.4)); 
+print(a); 
+print(b); 
 				
