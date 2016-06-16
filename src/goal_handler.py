@@ -55,8 +55,36 @@ from pose import Pose
 
 class goalHandler(object):
 
-	def __init__(self, filename, avoidance_type):
-		rospy.init_node('goal_sender')
+	def __init__(self, filename):
+
+		#logger = logging.getLogger(__name__)
+		logger_level = logging.DEBUG
+		#logger.setLevel(logger_level)
+		logger_format = '[%(levelname)-7s] %(funcName)-30s %(message)s'
+		try:
+			logging.getLogger().setLevel(logger_level)
+			logging.getLogger().handlers[0]\
+                .setFormatter(logging.Formatter(logger_format))
+		except IndexError:
+			logging.basicConfig(format=logger_format,
+                                level=logger_level,
+                               )
+
+		# handler = logging.FileHandler('goalHandler_log.log')
+		# handler.setLevel(logging.DEBUG)
+		# formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s')
+		# handler.setFormatter(formatter)
+		# logger.addHandler(handler)
+
+
+
+		rospy.init_node('goal_sender',log_level=rospy.DEBUG)
+
+		# Link node to Python's logger
+		handler = logging.StreamHandler()
+		handler.setFormatter(logging.Formatter(logger_format))
+		logging.getLogger().addHandler(handler)
+
 		self.stuck_buffer = 5
 		self.stuck_count = self.stuck_buffer
 		self.dpt = discretePolicyTranslator(filename)
@@ -66,13 +94,12 @@ class goalHandler(object):
 		self.tf_exist = False
 		self.tf_exception_wrapper()
 		self.goal_point = self.pose._pose
-		self.avoidance = sys.argv[2]
 		self.pub = rospy.Publisher('/deckard/move_base_simple/goal',PoseStamped,queue_size=10)
 		rospy.sleep(1) #<>TODO: figure out why the hell this works --> solves issue where robot would not move on initialization
 		rospy.Subscriber('/deckard/move_base/status',GoalStatusArray,self.callback)
 		#print("initial position: " + str(self.pose._pose))
 
-		logging.basicConfig(filename='goalHandler_debug.log',level=logging.DEBUG)
+		logging.info("Running experiment...")
 
 	def tf_exception_wrapper(self):
 		"""waits for transforms to become available and handles interim exceptions
@@ -91,7 +118,7 @@ class goalHandler(object):
 				# print(error)
 				# print("Waiting for transforms to become available. Will retry 10 times.")
 				# print("Try: " + str(tries) + "  Retrying in 2 seconds.\n")
-				error_str = "\nError!\n" + error + "\nWaiting for transforms to become available. Will retry 10 times." \
+				error_str = "\nError!\n" + str(error) + "\nWaiting for transforms to become available. Will retry 10 times." \
 							+ "\nTry: " + str(tries) + " Retrying in 2 seconds.\n"
 				print(error_str)
 				logging.error(error_str)
@@ -102,13 +129,15 @@ class goalHandler(object):
 		The function updates its knowledge of its position using tf data, then
 		checks if the robot is stuck and sends the appropriate goal pose.
 		"""
-
+		logging.info('called back')
 		self.pose.tf_update()
 		#self.last_position = self.pose._pose
 		if self.is_stuck():
 			self.send_goal(True)
 			while not self.is_at_goal():
-				continue
+				self.pose.tf_update()
+				rospy.sleep(0.1)
+				logging.info('waiting to reach goal; looping')
 		else:
 			self.send_goal()
 		#self.is_at_goal()
@@ -133,20 +162,22 @@ class goalHandler(object):
 			print("Goal pose does not yet exist!")
 			self.current_status = 3
 
+		return False
+
 	def is_stuck(self):
 		"""re-sends goal pose if robot is mentally or physically stuck for self.stuck_buffer number of iterations
 		"""
 
 		if self.stuck_count > 0: #check buffer
 			self.stuck_count += -1
-			#print("stuck count "+str(self.stuck_count))
+			logging.info("stuck count "+str(self.stuck_count))
 			return False #return not stuck
 		self.stuck_count = self.stuck_buffer
 		self.stuck_distance = math.sqrt(((self.pose._pose[0] - self.last_position[0]) ** 2) + ((self.pose._pose[1] - self.last_position[1]) ** 2))
 		self.last_position = self.pose._pose
-		logging.debug('stuck distance: ' + str(self.stuck_distance))
-		if self.stuck_distance < 0.5:
-			print("Robot stuck; resending goal.")
+		logging.info('stuck distance: ' + str(self.stuck_distance))
+		if self.stuck_distance < 0.5 and self.current_status != 'final goal':
+			#print("Robot stuck; resending goal.")
 			logging.info("Robot stuck; resending goal.")
 			return True
 		else:
@@ -160,10 +191,8 @@ class goalHandler(object):
 		point[0] = round(point[0])
 		point[1] = round(point[1])
 		next_point = self.dpt.getNextPose
-		if stuck_flag and self.avoidance == '-b': #<>TODO: talk to luke about whether or not to keep any of the 'blocked' code
+		if stuck_flag:
 			return self.dpt.getNextPose(point,stuck_flag)
-		elif stuck_flag and self.avoidance == '-s':
-			return self.dpt.getNextPose(point,False,stuck_flag)
 		else:
 			return self.dpt.getNextPose(point)
 
@@ -187,6 +216,7 @@ class goalHandler(object):
 
 		if self.goal_point == [2,2,0,0]: #<>TODO: Fix this gross hack, it makes puppies cry
 			theta = 180
+			self.current_status = 'final goal'
 
 		quat = tf.transformations.quaternion_from_euler(0,0,np.deg2rad(theta))
 		new_goal.pose.orientation.x = quat[0]
@@ -199,8 +229,8 @@ class goalHandler(object):
 		new_goal.header.frame_id = 'map'
 
 		self.pub.publish(new_goal)
-		logging.debug("sent goal: " + str(self.goal_point))
+		logging.info("sent goal: " + str(self.goal_point))
 
 if __name__ == "__main__":
-	gh = goalHandler(sys.argv[1],sys.argv[2])
+	gh = goalHandler(sys.argv[1])
 	rospy.spin()
