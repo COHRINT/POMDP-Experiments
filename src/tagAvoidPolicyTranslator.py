@@ -101,10 +101,10 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 
 		if(self.hardware):
-			cx = int(copPose[0]*2); 
-			cy = int(copPose[1]*2); 
-			rx = int(robberPose[0]*2); 
-			ry = int(robberPose[1]*2); 
+			cx = int(copPose[0])*2; 
+			cy = int(copPose[1])*2; 
+			rx = int(robberPose[0])*2; 
+			ry = int(robberPose[1])*2; 
 		else:
 			cx = int(copPose[0]); 
 			cy = int(copPose[1]); 
@@ -161,10 +161,10 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 	def getNextRobberPose(self,copPose,robberPose):
 		if(self.hardware):
-			cx = int(copPose[0]*2); 
-			cy = int(copPose[1]*2); 
-			rx = int(robberPose[0]*2); 
-			ry = int(robberPose[1]*2); 
+			cx = int(copPose[0])*2; 
+			cy = int(copPose[1])*2; 
+			rx = int(robberPose[0])*2; 
+			ry = int(robberPose[1])*2; 
 		else:
 			cx = int(copPose[0]); 
 			cy = int(copPose[1]); 
