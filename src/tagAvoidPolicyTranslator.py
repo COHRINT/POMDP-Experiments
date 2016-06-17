@@ -270,32 +270,7 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		print("Congratulations!! The cop caught the robber in: " + str(count) + " moves.")
 
 
-
-
-
-
-
-
-
-#file = "../policies/tagAvoidEmpty100.txt"; 
-file = "../policies/tagAvoidWalls100.txt";
-#file = "../policies/tagRandomWalls100.txt"; 
-t = tagAvoidPolicyTranslator(file); 
-t.simulate()
-
-
-copsx = t.copsx; 
-copsy = t.copsy; 
-robsx = t.robsx; 
-robsy = t.robsy; 
-
-
-
-
-fig = plt.figure()
-ax = plt.axes(xlim=(-.5, 9.5), ylim=(-.5, 9.5))
-line, = ax.plot([], [], lw=2)
-
+'''
 def init():
 	line.set_data([], [])
 	return line
@@ -315,11 +290,36 @@ def animate(i):
 		copsx = copsx[1:]; 
 		copsy = copsy[1:]; 
 		return line,
+'''
 
 
 
-anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)	 
-plt.show(); 		
+if __name__ == "__main__":
+
+	#file = "../policies/tagAvoidEmpty100.txt"; 
+	file = "../policies/tagAvoidWalls100.txt";
+	#file = "../policies/tagRandomWalls100.txt"; 
+	t = tagAvoidPolicyTranslator(file); 
+	t.simulate()
+
+
+	copsx = t.copsx; 
+	copsy = t.copsy; 
+	robsx = t.robsx; 
+	robsy = t.robsy; 
+
+
+
+
+	fig = plt.figure()
+	ax = plt.axes(xlim=(-.5, 9.5), ylim=(-.5, 9.5))
+	line, = ax.plot([], [], lw=2)
+
+
+
+
+	anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)	 
+	plt.show(); 		
 
 
 
