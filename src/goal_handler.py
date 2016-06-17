@@ -17,16 +17,15 @@ Input
 filename: .txt file
 	Text file containing alpha vectors for use in discretePolicyTranslator
 
-avoidance_type: '-s' or '-b'
-	Choose between 'secondary' or 'blocked' avoidance actions, which determine
-	how the robot deals with blocked goals. Defaults to none, which results in only
-	avoidance decisions by the navigation stack local planner, with no high-level decisions by
-	the POMDP policy.
+robot_name:
+	String of the robot's name that this script will be generating goal poses for.
+
+other_name:
+	String of the name of the other robot in the experiment.
 
 Output
 -----------
 Goal poses sent to the ROS navigation stack.
-
 
 
 Version
@@ -65,7 +64,7 @@ import tf
 from pose import Pose
 
 
-class goalHandler(object):
+class GoalHandler(object):
 
 	def __init__(self, filename, robot_name, other_robot):
 
@@ -180,8 +179,11 @@ class goalHandler(object):
 			self.stuck_count += -1
 			logging.info("stuck count "+str(self.stuck_count))
 			return False #return not stuck
+
 		self.stuck_count = self.stuck_buffer
-		self.stuck_distance = math.sqrt(((self.pose._pose[0] - self.last_position[0]) ** 2) + ((self.pose._pose[1] - self.last_position[1]) ** 2))
+		self.stuck_distance = math.sqrt(((self.pose._pose[0] - self.last_position[0]) ** 2)\
+		 		+ ((self.pose._pose[1] - self.last_position[1]) ** 2))
+
 		self.last_position = self.pose._pose
 		logging.info('stuck distance: ' + str(self.stuck_distance))
 		if self.stuck_distance < 0.5 and self.current_status != 'final goal':
@@ -213,7 +215,7 @@ class goalHandler(object):
 		theta = self.goal_point[3]
 
 		if self.goal_point == [2,2,0,0]: #<>TODO: Fix this gross hack, it makes puppies cry
-			theta = 180
+		#	theta = 180
 			self.current_status = 'final goal'
 
 		quat = tf.transformations.quaternion_from_euler(0,0,np.deg2rad(theta))
@@ -225,6 +227,8 @@ class goalHandler(object):
 
 		new_goal.header.stamp = rospy.Time.now()
 		new_goal.header.frame_id = 'map'
+
+		return new_goal
 
 	def send_goal(self,stuck_flag=False):
 		"""get and send new goal pose. Returns false without sending pose if pose to send
@@ -247,5 +251,5 @@ class goalHandler(object):
 		logging.info("sent goal: " + str(self.goal_point))
 
 if __name__ == "__main__":
-	gh = goalHandler(sys.argv[1],sys.argv[2])
+	gh = GoalHandler(sys.argv[1],sys.argv[2])
 	rospy.spin()
