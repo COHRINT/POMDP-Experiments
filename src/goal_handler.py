@@ -16,6 +16,7 @@ Input
 -----------
 filename: .txt file
 	Text file containing alpha vectors for use in discretePolicyTranslator
+	(contained in the repository in the "policies" folder)
 
 robot_name:
 	String of the robot's name that this script will be generating goal poses for.
@@ -104,7 +105,7 @@ class GoalHandler(object):
 
 		self.stuck_buffer = 5
 		self.stuck_count = self.stuck_buffer
-		self.current_status = 3
+		self.current_status = 3 #<>NOTE: DEPRECEATED
 		self.robo_type = bot_type
 		self.robot = robot_name
 
@@ -164,7 +165,7 @@ class GoalHandler(object):
 			#if random.random() < 0.1:
 			self.send_goal()
 
-		rospy.sleep(1)
+		rospy.sleep(1) #<>TODO: test shorter delays as well as no delay at all.
 
 	def is_at_goal(self): #<>NOTE: DEPRECEATED
 		"""checks if robot has arrived at its goal pose
