@@ -1,5 +1,7 @@
 *.pyc
 *.log
 
+policy_tester.py
+
 experiment_notes.txt
 bugs.txt

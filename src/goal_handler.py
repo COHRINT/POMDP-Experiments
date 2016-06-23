@@ -54,6 +54,7 @@ import numpy as np
 import sys
 import math
 import logging
+import random
 
 from discretePolicyTranslator import discretePolicyTranslator
 from tagAvoidPolicyTranslator import tagAvoidPolicyTranslator
@@ -83,17 +84,18 @@ class GoalHandler(object):
                                )
 
 		#<>TODO: get this file logging working, as well as debug level
-		# handler = logging.FileHandler('goalHandler_log.log')
-		# handler.setLevel(logging.DEBUG)
-		# formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s')
-		# handler.setFormatter(formatter)
-		# logger.addHandler(handler)
+		logger = logging.getLogger('pomdp_log_handle')
+		handler = logging.FileHandler('goalHandler_log.log')
+		formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s')
+		handler.setFormatter(formatter)
+		logger.addHandler(handler)
+		handler.setLevel(logging.DEBUG)
 
 		node_name = robot_name + '_goal_sender'
 		pub_name = '/' + robot_name + '/move_base_simple/goal'
 		sub_name = '/' + robot_name + '/move_base/status'
 
-		rospy.init_node(node_name,log_level=rospy.DEBUG)
+		rospy.init_node(node_name,log_level=rospy.INFO)
 
 		# Link node to Python's logger
 		handler = logging.StreamHandler()
@@ -104,11 +106,12 @@ class GoalHandler(object):
 		self.stuck_count = self.stuck_buffer
 		self.current_status = 3
 		self.robo_type = bot_type
+		self.robot = robot_name
 
 		self.tapt = tagAvoidPolicyTranslator(filename,True)
 
 		self.pose = Pose(robot_name,[0,0,0],'tf',None)
-		self.other_pose = Pose(other_robot,[1,1,1],'tf',None)
+		self.other_pose = Pose(other_robot,[2,2,0],'tf',None) #<>TODO: make sure [1,1,1] (or any starting coords) doesn't actually affect anything
 
 		self.last_position = self.pose._pose
 		self.other_robo_position = self.other_pose._pose
@@ -149,18 +152,21 @@ class GoalHandler(object):
 		logging.info('called back')
 		self.pose.tf_update()
 		self.other_pose.tf_update()
+		logging.info(self.robot + '\'s position: ' + str(self.pose._pose))
 		if self.is_stuck():
+			#if random.random() < 0.1:
 			self.send_goal(True)
 			# while not self.is_at_goal():
 			# 	self.pose.tf_update()
 			# 	rospy.sleep(0.1) #<>TODO: see if anything can be done to avoid adding these sleeps
 			# 	logging.info('waiting to reach goal; looping')
 		else:
+			#if random.random() < 0.1:
 			self.send_goal()
 
 		rospy.sleep(1)
 
-	def is_at_goal(self):
+	def is_at_goal(self): #<>NOTE: DEPRECEATED
 		"""checks if robot has arrived at its goal pose
 		"""
 		tol = 0.2
@@ -179,7 +185,7 @@ class GoalHandler(object):
 		"""
 		if self.stuck_count > 0: #check buffer
 			self.stuck_count += -1
-			logging.info("stuck count "+str(self.stuck_count))
+			#logging.info("stuck count "+str(self.stuck_count))
 			return False #return not stuck
 
 		self.stuck_count = self.stuck_buffer
@@ -187,7 +193,7 @@ class GoalHandler(object):
 		 		+ ((self.pose._pose[1] - self.last_position[1]) ** 2))
 
 		self.last_position = self.pose._pose
-		logging.info('stuck distance: ' + str(self.stuck_distance))
+		#logging.info('stuck distance: ' + str(self.stuck_distance))
 		if self.stuck_distance < 0.5 and self.current_status != 'final goal':
 			print("Robot stuck; resending goal.")
 			logging.info("Robot stuck; resending goal.")
@@ -198,21 +204,22 @@ class GoalHandler(object):
 	def get_new_goal(self,current_position,other_position,stuck_flag): #<>TODO: refine stuck vs blocked, as the robot can get stuck without technically beiing blocked
 		"""get new goal pose from policy translator module
 		"""
-		point = current_position
+		#point = current_position
 		#point[0] = round(point[0]) #<>NOTE: this is most likely unecessary
 		#point[1] = round(point[1])
-		if self.robo_type == 'cop':
-			next_point = self.tapt.getNextCopPose(point,other_position)
+		logging.info('other robot\'s position: ' + str(other_position))
+		if self.robo_type == '-c':
+			#next_point = self.tapt.getNextCopPose(point,other_position)
 			if stuck_flag:
-				return self.tapt.getNextCopPose(point,other_position,stuck_flag)
+				return self.tapt.getNextCopPose(current_position,other_position,stuck_flag)
 			else:
-				return self.tapt.getNextCopPose(point,other_position)
-		elif self.robo_type == 'robber':
-			next_point = self.tapt.getNextRobberPose(other_position,point)
+				return self.tapt.getNextCopPose(current_position,other_position)
+		elif self.robo_type == '-r':
+			#next_point = self.tapt.getNextRobberPose(other_position,point)
 			if stuck_flag:
-				return self.tapt.getNextRobberPose(other_position,point)
+				return self.tapt.getNextRobberPose(other_position,current_position)
 			else:
-				return self.tapt.getNextRobberPose(other_position,point)
+				return self.tapt.getNextRobberPose(other_position,current_position)
 
 	def create_goal_msg(self,goal_point):
 		"""create message to publish to ROS
@@ -245,14 +252,14 @@ class GoalHandler(object):
 		to that pose)
 		"""
 		new_pose = self.get_new_goal(self.pose._pose,self.other_pose._pose,stuck_flag)
-		if self.goal_point == new_pose and not stuck_flag: #blocks while robot is moving to stuck-goal
-			return False
+		#if self.goal_point == new_pose and not stuck_flag: #blocks while robot is moving to stuck-goal
+		#	return False
 		# elif abs(new_pose[3]-self.pose._pose[2]) > 160: #workaround for robot being unable to turn 180 degrees
 		# 	new_pose[0] = self.pose._pose[0]; new_pose[1] = self.pose._pose[1]; new_pose[2] = 0;
 		# 	new_pose[3] = 90
 		# 	self.goal_point = new_pose
-		else:
-			self.goal_point = new_pose
+		#else:
+		self.goal_point = new_pose
 
 		new_goal = self.create_goal_msg(new_pose)
 
