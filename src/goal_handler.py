@@ -155,14 +155,12 @@ class GoalHandler(object):
 		self.other_pose.tf_update()
 		logging.info(self.robot + '\'s position: ' + str(self.pose._pose))
 		if self.is_stuck():
-			#if random.random() < 0.1:
 			self.send_goal(True)
-			# while not self.is_at_goal():
+			# while not self.is_at_goal(): #<>NOTE: these lines will re-enable the old obstacle avoidance abiltiy until better method is developed
 			# 	self.pose.tf_update()
 			# 	rospy.sleep(0.1) #<>TODO: see if anything can be done to avoid adding these sleeps
 			# 	logging.info('waiting to reach goal; looping')
 		else:
-			#if random.random() < 0.1:
 			self.send_goal()
 
 		rospy.sleep(1) #<>TODO: test shorter delays as well as no delay at all.
@@ -205,18 +203,13 @@ class GoalHandler(object):
 	def get_new_goal(self,current_position,other_position,stuck_flag): #<>TODO: refine stuck vs blocked, as the robot can get stuck without technically beiing blocked
 		"""get new goal pose from policy translator module
 		"""
-		#point = current_position
-		#point[0] = round(point[0]) #<>NOTE: this is most likely unecessary
-		#point[1] = round(point[1])
 		logging.info('other robot\'s position: ' + str(other_position))
 		if self.robo_type == '-c':
-			#next_point = self.tapt.getNextCopPose(point,other_position)
 			if stuck_flag:
 				return self.tapt.getNextCopPose(current_position,other_position,stuck_flag)
 			else:
 				return self.tapt.getNextCopPose(current_position,other_position)
 		elif self.robo_type == '-r':
-			#next_point = self.tapt.getNextRobberPose(other_position,point)
 			if stuck_flag:
 				return self.tapt.getNextRobberPose(other_position,current_position)
 			else:
@@ -231,16 +224,11 @@ class GoalHandler(object):
 		new_goal.pose.position.z = self.goal_point[2]
 		theta = self.goal_point[3]
 
-		#if self.goal_point == [2,2,0,0]: #<>TODO: Fix this gross hack, it makes puppies cry
-		#	theta = 180
-			#self.current_status = 'final goal'
-
 		quat = tf.transformations.quaternion_from_euler(0,0,np.deg2rad(theta))
 		new_goal.pose.orientation.x = quat[0]
 		new_goal.pose.orientation.y = quat[1]
 		new_goal.pose.orientation.z = quat[2]
 		new_goal.pose.orientation.w = quat[3]
-		#<>NOTE: random spinning that occured in gazebo sim does not occur in when run of physical robot
 
 		new_goal.header.stamp = rospy.Time.now()
 		new_goal.header.frame_id = 'map'
@@ -253,14 +241,8 @@ class GoalHandler(object):
 		to that pose)
 		"""
 		new_pose = self.get_new_goal(self.pose._pose,self.other_pose._pose,stuck_flag)
-		#if self.goal_point == new_pose and not stuck_flag: #blocks while robot is moving to stuck-goal
-		#	return False
-		# elif abs(new_pose[3]-self.pose._pose[2]) > 160: #workaround for robot being unable to turn 180 degrees
-		# 	new_pose[0] = self.pose._pose[0]; new_pose[1] = self.pose._pose[1]; new_pose[2] = 0;
-		# 	new_pose[3] = 90
-		# 	self.goal_point = new_pose
-		#else:
-		self.goal_point = new_pose
+
+		self.goal_point = new_pose #<>TODO: hack to make robot be able to turn 180 degrees deleted, need to make new, better method
 
 		new_goal = self.create_goal_msg(new_pose)
 
