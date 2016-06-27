@@ -24,6 +24,8 @@ robot_name:
 other_name:
 	String of the name of the other robot in the experiment.
 
+robo_type: '-c' or '-r'
+	Flag to specify if the robot is to be the cop or the robber in the tag scenario.
 Output
 -----------
 Goal poses sent to the ROS navigation stack.
