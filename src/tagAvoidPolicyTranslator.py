@@ -203,7 +203,7 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 =======
 		print('getting next robber pose...')
->>>>>>> rounding bug in tagAvoidPolicyTranslator.py fixed, gitignore updated, goal_handler.py updated though code cleanup still necessary. Two-robot tag avoid confirmed working.
+>>>>>>> multibot_test
 		if(self.hardware):
 			cx = int(round(copPose[0]*2));
 			cy = int(round(copPose[1]*2));
@@ -362,12 +362,14 @@ if __name__ == "__main__":
 
 
 	'''
-=======
 	#file = "../policies/tagAvoidEmpty100.txt";
 	file = "../policies/tagAvoidWalls100.txt";
 	#file = "../policies/tagRandomWalls100.txt";
 	t = tagAvoidPolicyTranslator(file);
+<<<<<<< HEAD
 >>>>>>> rounding bug in tagAvoidPolicyTranslator.py fixed, gitignore updated, goal_handler.py updated though code cleanup still necessary. Two-robot tag avoid confirmed working.
+=======
+>>>>>>> multibot_test
 	t.simulate()
 
 
@@ -386,15 +388,9 @@ if __name__ == "__main__":
 
 
 
-<<<<<<< HEAD
-	anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)
-	plt.show();
-	'''
-
-
-
-
+	#anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)
+	#plt.show();
 =======
 	#anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)
 	#plt.show();
->>>>>>> rounding bug in tagAvoidPolicyTranslator.py fixed, gitignore updated, goal_handler.py updated though code cleanup still necessary. Two-robot tag avoid confirmed working.
+>>>>>>> multibot_test
