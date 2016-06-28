@@ -88,6 +88,7 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		self.goalX= 0; 
 		self.goalY = 0;  
 		self.hardware = hardware; 
+		self.belief = [1.0 for i in range(0,100)];
 
 		
 
@@ -262,7 +263,6 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 			cy = int(copPose[1]*2); 
 			rx = int(robberPose[0]*2); 
 			ry = int(robberPose[1]*2); 
-			self.belief = [1.0 for i in range(0,100)];
 		else:
 			cx = int(copPose[0]); 
 			cy = int(copPose[1]); 
