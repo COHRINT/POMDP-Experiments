@@ -319,9 +319,9 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 		if(self.hardware):
 			z = 0; 
-			if(distance(destX,destY,rx,ry) ==0):
+			if(self.distance(destX,destY,rx,ry) ==0):
 				z = 2; 
-			elif(distance(destX,destY,rx,ry) < 2):
+			elif(self.distance(destX,destY,rx,ry) < 2):
 				z = 1; 
 			self.belief = self.gridBayesFilter(destX,destY,self.belief,action,z,walls); 
 
