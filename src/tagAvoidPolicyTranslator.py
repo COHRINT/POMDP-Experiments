@@ -199,11 +199,8 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		return [cop,rob];
 
 	def getNextRobberPose(self,copPose,robberPose):
-<<<<<<< HEAD
-
-=======
 		print('getting next robber pose...')
->>>>>>> multibot_test
+
 		if(self.hardware):
 			cx = int(round(copPose[0]*2));
 			cy = int(round(copPose[1]*2));
@@ -340,7 +337,6 @@ def animate(i):
 
 if __name__ == "__main__":
 
-<<<<<<< HEAD
 
 
 
@@ -366,10 +362,7 @@ if __name__ == "__main__":
 	file = "../policies/tagAvoidWalls100.txt";
 	#file = "../policies/tagRandomWalls100.txt";
 	t = tagAvoidPolicyTranslator(file);
-<<<<<<< HEAD
->>>>>>> rounding bug in tagAvoidPolicyTranslator.py fixed, gitignore updated, goal_handler.py updated though code cleanup still necessary. Two-robot tag avoid confirmed working.
-=======
->>>>>>> multibot_test
+
 	t.simulate()
 
 
@@ -390,7 +383,3 @@ if __name__ == "__main__":
 
 	#anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)
 	#plt.show();
-=======
-	#anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)
-	#plt.show();
->>>>>>> multibot_test

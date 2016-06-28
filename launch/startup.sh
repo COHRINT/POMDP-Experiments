@@ -4,8 +4,11 @@
 # When shutting down experiment, close the programs in reverse order of opening.
 
 # Exporting and sourcing to add locations of important ROS packages to path
+
+# !!!--CHANGE THESE VARIABLES TO YOUR USERNAME AND WORKSPACE NAME--!!
 user="ian"
 workspace="catkin_ws"
+
 export1="export ROBOT=$HOSTNAME"
 source1="source /opt/ros/indigo/setup.bash"
 source2="source ~/$workspace/devel/setup.bash"
