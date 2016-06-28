@@ -24,6 +24,8 @@ robot_name:
 other_name:
 	String of the name of the other robot in the experiment.
 
+robo_type: '-c' or '-r'
+	Flag to specify if the robot is to be the cop or the robber in the tag scenario.
 Output
 -----------
 Goal poses sent to the ROS navigation stack.
@@ -72,7 +74,7 @@ class GoalHandler(object):
 	def __init__(self, filename, robot_name, other_robot, bot_type):
 
 		#logger = logging.getLogger(__name__)
-		logger_level = logging.DEBUG
+		logger_level = logging.INFO
 		#logger.setLevel(logger_level)
 		logger_format = '[%(levelname)-7s] %(funcName)-30s %(message)s'
 		try:
@@ -86,17 +88,18 @@ class GoalHandler(object):
 
 		#<>TODO: get this file logging working, as well as debug level
 		logger = logging.getLogger('pomdp_log_handle')
-		handler = logging.FileHandler('goalHandler_log.log')
+		filename = robot_name + '_goalHandler_log.log'
+		file_handler = logging.FileHandler(filename)
 		formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s')
-		handler.setFormatter(formatter)
-		logger.addHandler(handler)
-		handler.setLevel(logging.DEBUG)
+		file_handler.setFormatter(formatter)
+		logger.addHandler(file_handler)
+		file_handler.setLevel(logging.DEBUG)
 
 		node_name = robot_name + '_goal_sender'
 		pub_name = '/' + robot_name + '/move_base_simple/goal'
 		sub_name = '/' + robot_name + '/move_base/status'
 
-		rospy.init_node(node_name,log_level=rospy.INFO)
+		rospy.init_node(node_name,log_level=rospy.DEBUG)
 
 		# Link node to Python's logger
 		handler = logging.StreamHandler()
