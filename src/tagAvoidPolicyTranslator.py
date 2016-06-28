@@ -383,3 +383,4 @@ if __name__ == "__main__":
 
 	#anim = animation.FuncAnimation(fig, animate, init_func=init,frames=100, interval=500,save_count = 100, blit=False)
 	#plt.show();
+	'''

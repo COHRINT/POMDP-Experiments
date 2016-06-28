@@ -8,6 +8,8 @@
 # !!!--CHANGE THESE VARIABLES TO YOUR USERNAME AND WORKSPACE NAME--!!
 user="ian"
 workspace="catkin_ws"
+# !!!--CHANGE THESE VARIABLES TO YOUR USERNAME AND WORKSPACE NAME--!!
+
 
 export1="export ROBOT=$HOSTNAME"
 source1="source /opt/ros/indigo/setup.bash"
@@ -55,7 +57,7 @@ do
         xterm -e "ssh odroid@$ROBBER" &
     fi
     echo "-------"
-    echo "Enter '0' to if connections were successful"
+    echo "Enter '0' if both connections were successful"
     echo "Enter '1' to retry $COP connection"
     echo "Enter '2' to retry $ROBBER connection"
     echo "Enter '3' to retry both connections"
@@ -65,4 +67,14 @@ done
 # Launch ROS nodes and start running experiment
 echo "When vicon_nav.launch has been started on both robots, press ENTER to run experiment"
 read x
-xterm -e "$set_indigo && roslaunch pomdp_experiment goals.launch"
+run_input=1
+while [ $run_input -eq 1 ]
+do
+    xterm -hold -e "$set_indigo && roslaunch pomdp_experiment goals.launch"
+    echo "-------"
+    echo "Enter '1' to re-run experiment"
+    echo "or enter '0' to end the program"
+    read run_input
+done
+
+exit 0
