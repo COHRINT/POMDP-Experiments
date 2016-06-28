@@ -1,7 +1,7 @@
 <launch>
     <arg name="cop" value="deckard" />
     <arg name="robber" value="roy" />
-    <arg name="policy" value="$(find pomdp_experiment)/src/policies/tagAvoidEmpty100.txt" />
+    <arg name="policy" value="$(find pomdp_experiment)/src/policies/tagAvoidEmpty2.txt" />
 
     <node pkg="pomdp_experiment" type="goal_handler.py" name="cop_goal_handler"
         args="$(arg policy) $(arg cop) $(arg robber) -c" />
