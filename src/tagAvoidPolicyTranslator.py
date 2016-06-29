@@ -259,10 +259,10 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 
 		if(self.hardware):
-			cx = int(copPose[0]*2);
-			cy = int(copPose[1]*2);
-			rx = int(robberPose[0]*2);
-			ry = int(robberPose[1]*2);
+			cx = int(round(copPose[0]*2));
+			cy = int(round(copPose[1]*2));
+			rx = int(round(robberPose[0]*2));
+			ry = int(round(robberPose[1]*2));
 		else:
 			cx = int(copPose[0]);
 			cy = int(copPose[1]);
@@ -319,9 +319,9 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 		if(self.hardware):
 			z = 0;
-			if(distance(destX,destY,rx,ry) ==0):
+			if(self.distance(destX,destY,rx,ry) ==0):
 				z = 2;
-			elif(distance(destX,destY,rx,ry) < 2):
+			elif(self.distance(destX,destY,rx,ry) < 2):
 				z = 1;
 			self.belief = self.gridBayesFilter(destX,destY,self.belief,action,z,walls);
 
@@ -337,10 +337,10 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 	def getNextRobberPose(self,copPose,robberPose):
 
 		if(self.hardware):
-			cx = int(copPose[0]*2);
-			cy = int(copPose[1]*2);
-			rx = int(robberPose[0]*2);
-			ry = int(robberPose[1]*2);
+			cx = int(round(copPose[0]*2));
+			cy = int(round(copPose[1]*2));
+			rx = int(round(robberPose[0]*2));
+			ry = int(round(robberPose[1]*2));
 		else:
 			cx = int(copPose[0]);
 			cy = int(copPose[1]);

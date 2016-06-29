@@ -70,7 +70,7 @@ read x
 run_input=1
 while [ $run_input -eq 1 ]
 do
-    xterm -hold -e "$set_indigo && roslaunch pomdp_experiment goals.launch"
+    xterm -hold -e "$set_indigo && roslaunch pomdp_experiment goals.launch cop:=$COP robber:=$ROBBER"
     echo "-------"
     echo "Enter '1' to re-run experiment"
     echo "or enter '0' to end the program"

@@ -86,10 +86,10 @@ class GoalHandler(object):
                                 level=logger_level,
                                )
 
-		#<>TODO: get this file logging working, as well as debug level
+		# <>TODO: get this file logging working, as well as debug level
 		logger = logging.getLogger('pomdp_log_handle')
-		filename = robot_name + '_goalHandler_log.log'
-		file_handler = logging.FileHandler(filename)
+		log_filename = robot_name + '_goalHandler_log.log'
+		file_handler = logging.FileHandler(log_filename)
 		formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s')
 		file_handler.setFormatter(formatter)
 		logger.addHandler(file_handler)
@@ -163,7 +163,7 @@ class GoalHandler(object):
 			# 	self.pose.tf_update()
 			# 	rospy.sleep(0.1) #<>TODO: see if anything can be done to avoid adding these sleeps
 			# 	logging.info('waiting to reach goal; looping')
-		else:
+		elif self.is_at_goal():
 			self.send_goal()
 
 		rospy.sleep(1) #<>TODO: test shorter delays as well as no delay at all.
@@ -202,6 +202,19 @@ class GoalHandler(object):
 			return True
 		else:
 			return False
+
+	def rotation_assist(self):
+		"""sends goal with current position but better orientation to enable
+		robot to make 180 degree turns.
+		"""
+		goal_point = [self.pose._pose[0],
+						self.pose._pose[1],0.0,
+						self.pose._pose[2]+45]
+
+		new_goal = self.create_goal_msg(goal_point)
+		self.pub.publish(new_goal)
+		logging.info("sent goal: " + str(self.goal_point))
+		rospy.sleep(2)
 
 	def get_new_goal(self,current_position,other_position,stuck_flag): #<>TODO: refine stuck vs blocked, as the robot can get stuck without technically beiing blocked
 		"""get new goal pose from policy translator module
@@ -247,9 +260,13 @@ class GoalHandler(object):
 
 		self.goal_point = new_pose #<>TODO: hack to make robot be able to turn 180 degrees deleted, need to make new, better method
 
+		if (abs(new_pose[3] - self.pose._pose[2])) > 120:
+			self.rotation_assist()
+
 		new_goal = self.create_goal_msg(new_pose)
 
 		self.pub.publish(new_goal)
+		self.current_status = 1
 		logging.info("sent goal: " + str(self.goal_point))
 
 if __name__ == "__main__":
