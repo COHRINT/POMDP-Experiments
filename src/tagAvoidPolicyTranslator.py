@@ -318,6 +318,7 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 
 		if(self.hardware):
+<<<<<<< HEAD
 			z = 0;
 			if(self.distance(destX,destY,rx,ry) ==0):
 				z = 2;
@@ -326,6 +327,16 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 			self.belief = self.gridBayesFilter(destX,destY,self.belief,action,z,walls);
 
 			return [float(destX)/2,float(destY)/2,0.0,orient];
+=======
+			z = 0; 
+			if(self.distance(destX,destY,rx,ry) ==0):
+				z = 2; 
+			elif(self.distance(destX,destY,rx,ry) < 2):
+				z = 1; 
+			self.belief = self.gridBayesFilter(destX,destY,self.belief,action,z,walls); 
+
+			return [float(destX)/2,float(destY)/2,0.0,orient]; 
+>>>>>>> 4979d77f068bb717bcfcca864543cc9011767802
 		else:
 			return [destX,destY,0,orient,action]
 
