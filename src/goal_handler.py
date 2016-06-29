@@ -166,6 +166,9 @@ class GoalHandler(object):
 		elif self.is_at_goal():
 			self.send_goal()
 
+		#if (self.robo_type == "-c") and (self.tapt.distance(self.pose._pose[0],self.pose._pose[1],self.other_pose._pose[0],self.other_pose._pose[1]) < 1):
+		#	raise KeyboardInterrupt("THE ROBBER WAS CAUGHT!")
+
 		rospy.sleep(1) #<>TODO: test shorter delays as well as no delay at all.
 
 	def is_at_goal(self): #<>NOTE: DEPRECEATED
@@ -209,7 +212,7 @@ class GoalHandler(object):
 		"""
 		goal_point = [self.pose._pose[0],
 						self.pose._pose[1],0.0,
-						self.pose._pose[2]+45]
+						self.pose._pose[2]+90]
 
 		new_goal = self.create_goal_msg(goal_point)
 		self.pub.publish(new_goal)
