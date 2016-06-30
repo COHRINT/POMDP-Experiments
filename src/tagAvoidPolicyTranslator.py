@@ -39,7 +39,11 @@ tmp = getNextPose(copPose,robberPose);
 Version history:
 0.8: Inital Testing, arbitary number
 0.9: Added actual belief handling and proper observations
+<<<<<<< HEAD
 0.91: Added belief update within getCopPose()
+=======
+
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 *************************************************************
 '''
 
@@ -89,10 +93,14 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		self.goalY = 0;  
 		self.hardware = hardware; 
 		self.belief = [1.0 for i in range(0,100)];
+<<<<<<< HEAD
 		if('Walls' in fileName or 'walls' in fileName):
 			self.walls = True; 
 		else:
 			self.walls = False; 
+=======
+
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		
 
 
@@ -275,7 +283,11 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		a = [cx,cy,rx,ry]; 
 
 		if(bel == []):
+<<<<<<< HEAD
 			belief = self.belief; 
+=======
+			belief = self.fakeBelief(cx,cy,rx,ry); 
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		else:
 			belief = bel; 
  		
@@ -322,9 +334,15 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 		if(self.hardware):
 			z = 0; 
+<<<<<<< HEAD
 			if(self.distance(destX,destY,rx,ry) ==0):
 				z = 2; 
 			elif(self.distance(destX,destY,rx,ry) < 2):
+=======
+			if(distance(destX,destY,rx,ry) ==0):
+				z = 2; 
+			elif(distance(destX,destY,rx,ry) < 2):
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 				z = 1; 
 			self.belief = self.gridBayesFilter(destX,destY,self.belief,action,z,walls); 
 
@@ -356,6 +374,7 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		
 
 		walls = []
+<<<<<<< HEAD
 		if(self.walls):
 			walls += [[51,61],[61,51],[52,62], [62,52],[53,63],[63,53],[56,66],[66,56],[57,67],[67,57],[58,68],[68,58]];
 			walls += [[31,41],[41,31],[32,42],[42,32],[33,43],[43,33]];
@@ -366,6 +385,18 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 			walls += [[35,36],[36,35],[25,26],[26,25],[15,16],[16,15]]; 
 			walls += [[30,40],[40,30],[39,49],[49,39],[50,60],[60,50],[59,69],[69,59]]; #closes off rooms
 			
+=======
+		'''
+		walls += [[51,61],[61,51],[52,62], [62,52],[53,63],[63,53],[56,66],[66,56],[57,67],[67,57],[58,68],[68,58]];
+		walls += [[31,41],[41,31],[32,42],[42,32],[33,43],[43,33]];
+		walls += [[36,46],[46,36],[37,47],[47,37],[38,48],[48,38]]; 
+		walls += [[63,64],[64,63],[73,74],[74,73],[83,84],[84,83]]; 
+		walls += [[65,66],[66,65],[75,76],[76,75],[85,86],[86,85]]; 
+		walls += [[33,34],[34,33],[23,24],[24,23],[13,14],[14,13]]; 
+		walls += [[35,36],[36,35],[25,26],[26,25],[15,16],[16,15]]; 
+		walls += [[30,40],[40,30],[39,49],[49,39],[50,60],[60,50],[59,69],[69,59]]; #closes off rooms
+		'''
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 
 		if(cx-rx <= 0 and rx < 9 and [rx*10 + ry,(rx+1)*10+ry] not in walls):
 			dests += [[rx+1,ry,1]];
@@ -413,9 +444,15 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 
 	def simulate(self):
 		cx = 1; 
+<<<<<<< HEAD
 		cy = 9; 
 		rx = 8; 
 		ry = 4; 
+=======
+		cy = 1; 
+		rx = 8; 
+		ry = 1; 
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 
 		self.copsx = []; 
 		self.copsy = []; 
@@ -429,6 +466,7 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 		#startTime = time.clock(); 
 		walls = []; 
 		
+<<<<<<< HEAD
 		if(self.walls):
 			walls += [[51,61],[61,51],[52,62], [62,52],[53,63],[63,53],[56,66],[66,56],[57,67],[67,57],[58,68],[68,58]];
 			walls += [[31,41],[41,31],[32,42],[42,32],[33,43],[43,33]];
@@ -439,16 +477,36 @@ class tagAvoidPolicyTranslator(discretePolicyTranslator):
 			walls += [[35,36],[36,35],[25,26],[26,25],[15,16],[16,15]]; 
 			walls += [[30,40],[40,30],[39,49],[49,39],[50,60],[60,50],[59,69],[69,59]]; #closes off rooms
 			
+=======
+		'''
+		walls += [[51,61],[61,51],[52,62], [62,52],[53,63],[63,53],[56,66],[66,56],[57,67],[67,57],[58,68],[68,58]];
+		walls += [[31,41],[41,31],[32,42],[42,32],[33,43],[43,33]];
+		walls += [[36,46],[46,36],[37,47],[47,37],[38,48],[48,38]]; 
+		walls += [[63,64],[64,63],[73,74],[74,73],[83,84],[84,83]]; 
+		walls += [[65,66],[66,65],[75,76],[76,75],[85,86],[86,85]]; 
+		walls += [[33,34],[34,33],[23,24],[24,23],[13,14],[14,13]]; 
+		walls += [[35,36],[36,35],[25,26],[26,25],[15,16],[16,15]]; 
+		walls += [[30,40],[40,30],[39,49],[49,39],[50,60],[60,50],[59,69],[69,59]]; #closes off rooms
+		'''
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 
 		cov = [[12,0],[0,12]]; 
 		belief = [1.0 for i in range(0,100)];
 
+<<<<<<< HEAD
 		'''
+=======
+		
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		for i in range(0,100):
 			rx2 = i/10; 
 			ry2 = i%10; 
 			belief[i] = multivariate_normal.pdf([rx2,ry2],[rx,ry],cov); 
+<<<<<<< HEAD
 		'''
+=======
+		
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 
 		belief = self.normalize(belief);  
 		tmpb = []
@@ -577,7 +635,10 @@ def scatterWalls():
 
 
 def update(data,line): 
+<<<<<<< HEAD
 	global cbar
+=======
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 	mat.set_data(data);
 	global copsx; 
 	global copsy;
@@ -587,23 +648,39 @@ def update(data,line):
 	global plotBelief
 	if(len(copsx) > 0):
 		#a = ax.scatter(tmp%10,tmp/10,c='black',s = 50,marker='x'); 
+<<<<<<< HEAD
 		#if(not plotBelief):
 		plt.cla();  
 
 		ax.scatter(robsy[0],robsx[0], c= 'red', s = 100);
 			
 		ax.scatter(copsy[0],copsx[0], c= 'blue', s = 100); 
+=======
+		if(not plotBelief):
+			plt.cla();  
+
+			ax.scatter(robsx[0],robsy[0], c= 'red', s = 100);
+			
+			ax.scatter(copsx[0],copsy[0], c= 'blue', s = 100); 
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		#if(plotBelief):
 			#ax.scatter(copsx[0],copsy[0], c= 'white', s = 100); 
 
 		scatterWalls(); 
+<<<<<<< HEAD
 		plt.imshow(convertVectorToGrid(bet[0]), interpolation = "none",cmap = 'viridis'); 
+=======
+
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		plt.axis([-.5, 9.5,-.5, 9.5])
 		copsx = copsx[1:]; 
 		copsy = copsy[1:];
 		robsx = robsx[1:]; 
 		robsy = robsy[1:]; 
+<<<<<<< HEAD
 		bet = bet[1:]; 
+=======
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		
 	return mat; 
 
@@ -612,14 +689,20 @@ def data_gen():
 	global size;
 	global plotBelief;  
 	while len(bet) > 0:
+<<<<<<< HEAD
 		'''
+=======
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		if(plotBelief):
 			yield convertVectorToGrid(bet[0]); 
 		else:
 			yield convertVectorToGrid([.01 for i in range(0,100)]); 
 		bet = bet[1:]; 
+<<<<<<< HEAD
 		'''
 		yield convertVectorToGrid([.01 for i in range(0,100)]);
+=======
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 		
 
 
@@ -649,9 +732,14 @@ if __name__ == "__main__":
 	#file = "../policies/tagAvoidEmptyStarting1.txt";
 	#file = "../policies/tagAvoidWallsStarting1.txt";
 	#file = "../policies/tagAvoidWallsStarting2.txt";
+<<<<<<< HEAD
 	#file = "../policies/tagAvoidEmpty2.txt"
 	#file = "../policies/tagAvoidWalls4.txt"
 	file = "../policies/tagAvoidWalls5.txt"
+=======
+	file = "../policies/tagAvoidEmpty2.txt"
+	#file = "../policies/tagAvoidWalls4.txt"
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 
 	t = tagAvoidPolicyTranslator(file); 
 	print("Policy Loaded"); 
@@ -690,11 +778,14 @@ if __name__ == "__main__":
 	bet = t.bet; 
 	plotBelief = True
 
+<<<<<<< HEAD
 
 	copsx = copsx[1:]; 
 	copsy = copsy[1:];
 	robsx = robsx[1:]; 
 	robsy = robsy[1:]; 
+=======
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 	'''
 	for i in range(0,len(bet)):
 		for j in range(0,len(bet[0])):
@@ -707,10 +798,33 @@ if __name__ == "__main__":
 	line, = ax.plot([], [], lw=2)
 	colormin = min(convertGridToVector(bet)); 
 	colormax = max(convertGridToVector(bet[0:len(bet)])); 
+<<<<<<< HEAD
+=======
+	mat = ax.matshow(convertVectorToGrid(bet[0]),vmin = colormin, vmax = colormax)
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 
 	mat = ax.matshow(convertVectorToGrid(bet[0]),vmin = colormin, vmax = colormax, cmap = 'viridis')
 
+	plt.colorbar(mat); 
+	ani = animation.FuncAnimation(fig, update,frames=data_gen, interval=500, save_count=100, blit=False, fargs = [line]); 
+	#plt.show(); 		
+	ani.save('tagAvoidBelief.gif', writer='imagemagick', fps=2)
+	
+	'''
+	copsx = t.copsx; 
+	copsy = t.copsy; 
+	robsx = t.robsx; 
+	robsy = t.robsy; 
+	bet = t.bet; 
+	plotBelief = False
+	fig = plt.figure()
+	ax = plt.axes(xlim=(-.5, 9.5), ylim=(-.5, 9.5))
+	line, = ax.plot([], [], lw=2)
+	colormin = min(convertGridToVector(bet)); 
+	colormax = max(convertGridToVector(bet)); 
+	mat = ax.matshow(convertVectorToGrid(bet[0]),vmin = colormin, vmax = .5)
 
+<<<<<<< HEAD
 	cbar = plt.colorbar(mat); 
 	ani = animation.FuncAnimation(fig, update,frames=data_gen, interval=500, save_count=100, blit=False, fargs = [line]); 
 	#plt.show(); 		
@@ -733,6 +847,11 @@ if __name__ == "__main__":
 	#plt.colorbar(mat); 
 	ani = animation.FuncAnimation(fig, update,frames=data_gen, interval=100, save_count=100, blit=False, fargs = [line]); 
 
+=======
+	#plt.colorbar(mat); 
+	ani = animation.FuncAnimation(fig, update,frames=data_gen, interval=100, save_count=100, blit=False, fargs = [line]); 
+
+>>>>>>> 441b412aca9fd7dcddeb996e66012e4da0ee2c1f
 	ani.save('tagAvoidPlain.gif', writer='imagemagick', fps=2)
 	'''
 
