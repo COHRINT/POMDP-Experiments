@@ -115,7 +115,7 @@ class continuousPolicyTranslator():
 			destX = destX/2; 
 			destY = destY/2; 
 
-		self.beliefUpdate(action,destX*10+destY); 
+		self.beliefUpdate(action,int(destX*10+destY); 
 
 
 		return [destX,destY,0,orient];  
