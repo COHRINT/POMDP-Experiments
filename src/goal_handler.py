@@ -59,8 +59,9 @@ import math
 import logging
 import random
 
-from discretePolicyTranslator import discretePolicyTranslator
-from tagAvoidPolicyTranslator import tagAvoidPolicyTranslator
+#from discretePolicyTranslator import discretePolicyTranslator
+#from tagAvoidPolicyTranslator import tagAvoidPolicyTranslator
+from continuousPolicyTranslator import continuousPolicyTranslator
 from geometry_msgs.msg import PoseStamped
 from actionlib_msgs.msg import GoalStatusArray
 import std_msgs.msg
@@ -112,13 +113,18 @@ class GoalHandler(object):
 		self.robo_type = bot_type
 		self.robot = robot_name
 
-		self.tapt = tagAvoidPolicyTranslator(filename,True)
+		self.pt = continuousPolicyTranslator(filename,hardware=True)
 
 		self.pose = Pose(robot_name,[0,0,0],'tf',None)
-		self.other_pose = Pose(other_robot,[2,2,0],'tf',None) #<>TODO: make sure [1,1,1] (or any starting coords) doesn't actually affect anything
+		if other_robot == "False":
+			self.multi = False
+		else:
+			self.multi = True
+			self.other_pose = Pose(other_robot,[2,2,0],'tf',None) #<>TODO: make sure [1,1,1] (or any starting coords) doesn't actually affect anything
 
 		self.last_position = self.pose._pose
-		self.other_robo_position = self.other_pose._pose
+		if self.multi:
+			self.other_robo_position = self.other_pose._pose
 
 		self.tf_exist = False
 		self.tf_exception_wrapper()
@@ -137,7 +143,8 @@ class GoalHandler(object):
 		while not self.tf_exist and tries < 10:
 			try:
 				self.pose.tf_update()
-				self.other_pose.tf_update()
+				if self.multi:
+					self.other_pose.tf_update()
 				self.tf_exist = True
 			except tf.LookupException as error:
 				tries = tries + 1
@@ -155,7 +162,8 @@ class GoalHandler(object):
 		"""
 		logging.info('called back')
 		self.pose.tf_update()
-		self.other_pose.tf_update()
+		if self.multi:
+			self.other_pose.tf_update()
 		logging.info(self.robot + '\'s position: ' + str(self.pose._pose))
 		if self.is_stuck():
 			self.send_goal(True)
@@ -234,6 +242,14 @@ class GoalHandler(object):
 			else:
 				return self.tapt.getNextRobberPose(other_position,current_position)
 
+	def get_new_goal(self,current_position,stuck_flag):
+		"""get new goal pose from policy translator module for single robot case
+		"""
+		if stuck_flag:
+			return self.pt.getNextPose(current_position)
+		else:
+			return self.pt.getNextPose(current_position)
+
 	def create_goal_msg(self,goal_point):
 		"""create message to publish to ROS
 		"""
@@ -259,7 +275,10 @@ class GoalHandler(object):
 		is the same as the current pose and the robot is not stuck (meaning it is enroute
 		to that pose)
 		"""
-		new_pose = self.get_new_goal(self.pose._pose,self.other_pose._pose,stuck_flag)
+		if self.multi:
+			new_pose = self.get_new_goal(self.pose._pose,self.other_pose._pose,stuck_flag)
+		else:
+			new_pose = self.get_new_goal(self.pose._pose,stuck_flag)
 
 		self.goal_point = new_pose #<>TODO: hack to make robot be able to turn 180 degrees deleted, need to make new, better method
 
