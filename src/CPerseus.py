@@ -3,7 +3,7 @@
 __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __license__ = "GPL"
-__version__ = "0.1"
+__version__ = "1.0"
 __maintainer__ = "Luke Burks"
 __email__ = "clburks9@gmail.com"
 __status__ = "Development"

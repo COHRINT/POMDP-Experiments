@@ -1,5 +1,35 @@
+'''
+****************************************************
+File: continuousPolicyTranslator.py
+Written By: Luke Burks
+July 2016
+
+Input: File name, hardware flag, current pose
+Output: Goal pose
+
+Use:
+Initialize with the location of the pre-generated 
+continuous policy file and hardware flag.  
+Call the function getNextPose() with the current 
+pose argument 
+
+Version History:
+1.0.0: initial release. Only intended for use with 
+	two dimensional localization problems. 
 
 
+****************************************************
+'''
+
+
+
+__author__ = "Luke Burks"
+__copyright__ = "Copyright 2016, Cohrint"
+__license__ = "GPL"
+__version__ = "1.0"
+__maintainer__ = "Luke Burks"
+__email__ = "clburks9@gmail.com"
+__status__ = "Development"
 
 
 
@@ -42,6 +72,10 @@ class continuousPolicyTranslator():
 	
 		x = pose[0]; 
 		y = pose[1]; 
+
+		if(self.hardware):
+			x = x*2; 
+			y = y*2; 
 		
 		action = self.getAction(); 
 
@@ -74,6 +108,11 @@ class continuousPolicyTranslator():
 
 		self.goalX = destX; 
 		self.goalY = destY; 
+
+
+		if(hardware):
+			destX = destX/2; 
+			destY = destY/2; 
 
 		return [destX,destY,0,orient];  
 
