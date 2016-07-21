@@ -81,16 +81,18 @@ class continuousPolicyTranslator():
 		x = pose[0]; 
 		y = pose[1]; 
 
-		if(self.hardware):
-			x = x*2; 
-			y = y*2; 
+		
 		
 		action = self.getAction(); 
 
 		orient = 0; 
 
-		destX = x + self.delA[action][0]; 
-		destY = y + self.delA[action][1]; 
+		if(self.hardware):
+			destX = x + float(self.delA[action][0])/2; 
+			destY = y + float(self.delA[action][1])/2; 
+		else:
+			destX = x + self.delA[action][0]; 
+			destY = y + self.delA[action][1]; 
 
 		if(action == 2):
 			actVerb = "Left"; 
@@ -111,11 +113,8 @@ class continuousPolicyTranslator():
 		self.goalY = destY; 
 
 
-		if(self.hardware):
-			destX = destX/2; 
-			destY = destY/2; 
-
-		self.beliefUpdate(action,int(destX*10+destY); 
+		
+		self.beliefUpdate(action,int(destX*10+destY)); 
 
 
 		return [destX,destY,0,orient];  
@@ -207,7 +206,7 @@ class continuousPolicyTranslator():
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(fileName = "localizationAlphas3.npy"); 
+	c = continuousPolicyTranslator(fileName = "localizationAlphas1.txt",hardware = True); 
 
 	print("Check 1"); 
 	print(c.getNextPose([2,2])); 
