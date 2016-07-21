@@ -45,7 +45,7 @@ import copy
 
 class continuousPolicyTranslator():
 
-	def __init__(self,fileName= "tmpalphas.npy", hardware = False):
+	def __init__(self,fileName= "tmpalphas.npy",numBeliefs = 20, hardware = False):
 		
 		if("txt" in fileName):
 			self.readAlphas(fileName); 
@@ -53,6 +53,8 @@ class continuousPolicyTranslator():
 			self.Gamma = np.load(fileName); 
 		self.hardware = hardware; 
 		self.setInitialBelief();
+		self.nB = numBeliefs; 
+		self.B.condense(self.nB); 
 		a = Perseus(dis = False);
 		self.pz = a.pz; 
 		self.r = a.r; 
@@ -85,29 +87,22 @@ class continuousPolicyTranslator():
 
 		orient = 0; 
 
+		destX = x + self.delA[action][0]; 
+		destY = y + self.delA[action][1]; 
+
 		if(action == 0):
-			destX = x-1; 
-			destY = y; 
 			actVerb = "Left"; 
 			orient = 180; 
 		elif(action == 1):
-			destX = x+1; 
-			destY = y; 
 			actVerb = "Right"; 
 			orient = 0; 
 		elif(action == 2):
-			destX = x; 
-			destY = y+1; 
 			actVerb = "Up";
 			orient = 90; 
 		elif(action == 3):
-			destX = x; 
-			destY = y-1; 
 			actVerb = "Down";
 			orient = -90; 
 		else:
-			destX = x; 
-			destY = y;
 			actVerb = "Wait";
 
 		self.goalX = destX; 
@@ -192,7 +187,9 @@ class continuousPolicyTranslator():
 				smean = np.transpose(sig*sstmp3).tolist()[0]; 
 
 				btmp.addG(Gaussian(smean,sig,w)); 
+		btmp.condense(self.nB); 
 		btmp.normalizeWeights(); 
+
 		self.B = btmp; 
 
 
@@ -210,5 +207,5 @@ if __name__ == "__main__":
 	print("Check 1"); 
 	print(c.getNextPose([2,2])); 
 	print("Check 2"); 
-	print(c.getNextPose([3,8])); 
+	print(c.getNextPose([8,0])); 
 	 

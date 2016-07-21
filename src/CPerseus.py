@@ -75,7 +75,7 @@ class Perseus:
 		
 
 
-	def solve(self,N = 1,nBranch = 4,verbose = False, maxMix = 20):
+	def solve(self,N = 1,nBranch = 4,verbose = False, maxMix = 20, finalMix = 20):
 		
 		for counter in range(0,N):
 	
@@ -154,6 +154,9 @@ class Perseus:
 			if(counter < N-1):
 				for i in range(0,len(GammaNew)):
 					GammaNew[i].condense(maxMix);
+			elif(counter == N-1):
+				for i in range(0,len(GammaNew)):
+					GammaNew[i].condense(finalMix);
 
 			if(verbose):
 				#GammaNew[0].display(); 
@@ -745,7 +748,7 @@ def convertVectorToGrid(b):
 
 if __name__ == "__main__":
 	a = Perseus(nB = 5,dis = False); 
-	a.solve(N = 10,verbose = True,maxMix = 4);
+	a.solve(N = 2,verbose = True,maxMix = 2, finalMix = 20);
 	print(""); 
 	print("Policy Generated"); 
 	#a.Gamma[0].display();   
