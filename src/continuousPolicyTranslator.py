@@ -81,18 +81,20 @@ class continuousPolicyTranslator():
 		x = pose[0]; 
 		y = pose[1]; 
 
-		
+	
 		
 		action = self.getAction(); 
 
 		orient = 0; 
 
 		if(self.hardware):
-			destX = x + float(self.delA[action][0])/2; 
-			destY = y + float(self.delA[action][1])/2; 
-		else:
-			destX = x + self.delA[action][0]; 
-			destY = y + self.delA[action][1]; 
+			x = float(x)*2.0; 
+			y = float(y)*2.0; 
+		
+		destX = x + self.delA[action][0]; 
+		destY = y + self.delA[action][1]; 
+
+	
 
 		if(action == 2):
 			actVerb = "Left"; 
@@ -115,6 +117,12 @@ class continuousPolicyTranslator():
 
 		
 		self.beliefUpdate(action,int(destX*10+destY)); 
+
+		if(self.hardware):
+			destX = float(destX)/2.0; 
+			destY = float(destY)/2.0; 
+
+		
 
 
 		return [destX,destY,0,orient];  
@@ -211,5 +219,5 @@ if __name__ == "__main__":
 	print("Check 1"); 
 	print(c.getNextPose([2,2])); 
 	print("Check 2"); 
-	print(c.getNextPose([8,0])); 
+	print(c.getNextPose([4,0])); 
 	 
