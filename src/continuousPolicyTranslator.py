@@ -74,6 +74,8 @@ class continuousPolicyTranslator():
 		g = self.Gamma[np.argmax([self.continuousDot(j,self.B) for j in self.Gamma])]
 		return g.action; 
 
+
+	#TODO: The actions numbers are all screwed up????
 	def getNextPose(self,pose):
 	
 		x = pose[0]; 
@@ -90,16 +92,16 @@ class continuousPolicyTranslator():
 		destX = x + self.delA[action][0]; 
 		destY = y + self.delA[action][1]; 
 
-		if(action == 0):
+		if(action == 2):
 			actVerb = "Left"; 
 			orient = 180; 
-		elif(action == 1):
+		elif(action == 3):
 			actVerb = "Right"; 
 			orient = 0; 
-		elif(action == 2):
+		elif(action == 1):
 			actVerb = "Up";
 			orient = 90; 
-		elif(action == 3):
+		elif(action == 0):
 			actVerb = "Down";
 			orient = -90; 
 		else:
