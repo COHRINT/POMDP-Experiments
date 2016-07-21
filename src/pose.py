@@ -83,8 +83,8 @@ class Pose(object):
     def tf_update(self):
         import rospy
         import tf
-        ref = "/deckard/odom"
-        child = "/deckard/base_footprint"
+        ref = "/" + self.robot + "/odom"
+        child = "/" + self.robot + "/base_footprint"
         (trans, rot) = self.listener.lookupTransform(ref, child, rospy.Time(0))
         x = trans[0]
         y = trans[1]

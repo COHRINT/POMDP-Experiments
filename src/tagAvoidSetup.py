@@ -63,6 +63,9 @@ def xyToa(x1,y1,x2,y2):
 def xyToa(c):
 	return c[0]*1000+c[1]*100+c[2]*10+c[3]; l
 
+
+
+
 def initialize(include_walls = False):
 
 
@@ -90,6 +93,11 @@ def initialize(include_walls = False):
 		for j in range(0,numStates):
 			[cx1,cy1,rx1,ry1] = aToxy(i); 
 			[cx2,cy2,rx2,ry2] = aToxy(j); 
+
+			if(i==0 and j==1):
+				print(aToxy(i));
+				print(aToxy(j)); 
+
 
 			#make sure all movements are within a ditance of 1
 			if(distance(cx1,cy1,cx2,cy2) > 1 or distance(rx1,ry1,rx2,ry2) > 1):
@@ -313,10 +321,20 @@ def convertToSimpleAlphas(als,fileName):
 
 
 
+<<<<<<< HEAD
 generateFile(False); 
+=======
+
+
+#generateFile(False); 
+>>>>>>> 25ab547539a52f6ee8dda51996e6e35344529020
 
 
 #print(aToxy(121)); 
 #b = aToxy(121); 
-#print(xyToa(b))
+[px,pz,r] = initialize(True); 
+a = aToxy(px[0][1].index(.2));
+b = aToxy(px[0][1].index(.4)); 
+print(a); 
+print(b); 
 				
