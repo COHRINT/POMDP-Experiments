@@ -54,7 +54,7 @@ class continuousPolicyTranslator():
 		self.hardware = hardware; 
 		self.setInitialBelief();
 		self.nB = numBeliefs; 
-		self.B.condense(self.nB); 
+		#self.B.condense(self.nB); 
 		a = Perseus(dis = False);
 		self.pz = a.pz; 
 		self.r = a.r; 
@@ -114,6 +114,9 @@ class continuousPolicyTranslator():
 		if(self.hardware):
 			destX = destX/2; 
 			destY = destY/2; 
+
+		self.beliefUpdate(action,destX*10+destY); 
+
 
 		return [destX,destY,0,orient];  
 
@@ -204,7 +207,7 @@ class continuousPolicyTranslator():
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(fileName = "localizationAlphas2.npy"); 
+	c = continuousPolicyTranslator(fileName = "localizationAlphas3.npy"); 
 
 	print("Check 1"); 
 	print(c.getNextPose([2,2])); 
