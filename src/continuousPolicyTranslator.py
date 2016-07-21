@@ -45,8 +45,12 @@ import copy
 
 class continuousPolicyTranslator():
 
-	def __init__(self,fileName= "tmpalphas.txt", hardware = False):
-		self.readAlphas(fileName); 
+	def __init__(self,fileName= "tmpalphas.npy", hardware = False):
+		
+		if("txt" in fileName):
+			self.readAlphas(fileName); 
+		else:
+			self.Gamma = np.load(fileName); 
 		self.hardware = hardware; 
 		self.setInitialBelief();
 		a = Perseus(dis = False);
@@ -65,7 +69,7 @@ class continuousPolicyTranslator():
 
 
 	def getAction(self):
-		g = self.Gamma[np.argmax([self.continuousDot(self.Gamma[j],self.B) for j in range(0,len(self.Gamma))])]
+		g = self.Gamma[np.argmax([self.continuousDot(j,self.B) for j in self.Gamma])]
 		return g.action; 
 
 	def getNextPose(self,pose):
@@ -110,7 +114,7 @@ class continuousPolicyTranslator():
 		self.goalY = destY; 
 
 
-		if(hardware):
+		if(self.hardware):
 			destX = destX/2; 
 			destY = destY/2; 
 
@@ -201,6 +205,10 @@ class continuousPolicyTranslator():
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(); 
-	print(c.getNextPose([2,2]))
+	c = continuousPolicyTranslator(fileName = "localizationAlphas2.npy"); 
+
+	print("Check 1"); 
+	print(c.getNextPose([2,2])); 
+	print("Check 2"); 
+	print(c.getNextPose([3,8])); 
 	 

@@ -411,9 +411,14 @@ class Perseus:
 
 	def printToSimpleAlphas(self,fileName = "tmpalphas.txt"):
 		f = open(fileName,"w"); 
+
+		
+
+	
 		for i in range(0,len(self.Gamma)):
 			self.Gamma[i].printToFile(f); 
 		f.close(); 
+		
 
 
 	def initializeOldGrid(self,cor = .85, zed = 1):
@@ -740,12 +745,16 @@ def convertVectorToGrid(b):
 
 if __name__ == "__main__":
 	a = Perseus(nB = 5,dis = False); 
-	a.solve(N = 10,verbose = True,maxMix = 3);
+	a.solve(N = 10,verbose = True,maxMix = 4);
 	print(""); 
 	print("Policy Generated"); 
 	#a.Gamma[0].display();   
 	
-	a.printToSimpleAlphas(); 
+	#a.printToSimpleAlphas(); 
+
+	f = open("tmpAlphas.npy","w"); 
+	np.save(f,a.Gamma); 
+
 
 	'''
 	b = np.matrix([[2,3],[0,1]]); 
