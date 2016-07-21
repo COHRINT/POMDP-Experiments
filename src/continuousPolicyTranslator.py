@@ -96,16 +96,16 @@ class continuousPolicyTranslator():
 
 	
 
-		if(action == 2):
+		if(action == 0):
 			actVerb = "Left"; 
 			orient = 180; 
-		elif(action == 3):
+		elif(action == 1):
 			actVerb = "Right"; 
 			orient = 0; 
-		elif(action == 1):
+		elif(action == 2):
 			actVerb = "Up";
 			orient = 90; 
-		elif(action == 0):
+		elif(action == 3):
 			actVerb = "Down";
 			orient = -90; 
 		else:
