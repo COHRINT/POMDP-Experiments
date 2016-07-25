@@ -118,7 +118,7 @@ class continuousPolicyTranslator():
 		b = (y1-y2)*(y1-y2); 
 		return math.sqrt(a+b); 
 
-	def getNextPose(self,pose):
+	def getNextPose(self,pose,cop):
 	
 		if(self.tag):
 			x1 = pose[0]; 
@@ -143,7 +143,7 @@ class continuousPolicyTranslator():
 		elif(action == 2):
 			action = 3;
 
-		print(action);  
+		#print(action);  
 		
 		orient = 0; 
 
@@ -202,14 +202,14 @@ class continuousPolicyTranslator():
 		else:
 			actVerb = "Wait";
 
-
-		if(self.tag):
-			o = 0; 
-			if(self.distance(x1,y1,x2,y2)):
-				o = 1; 
-			self.beliefUpdate(action,o); 
-		else:
-			self.beliefUpdate(action,int(destX*10+destY)); 
+		if(cop):
+			if(self.tag):
+				o = 0; 
+				if(self.distance(x1,y1,x2,y2)):
+					o = 1; 
+				self.beliefUpdate(action,o); 
+			else:
+				self.beliefUpdate(action,int(destX*10+destY)); 
 
 
 
@@ -226,7 +226,11 @@ class continuousPolicyTranslator():
 		
 
 		if(self.tag):
-			return [[destX1,destY1,0,orient],[destX2,destY2,0,orient]]; 
+			if(cop):
+				return [destX1,destY1,0,orient]; 
+			else:
+				return [destX2,destY2,0,orient]
+			
 		else:
 			return [destX,destY,0,orient];  
 
@@ -333,7 +337,8 @@ class continuousPolicyTranslator():
 		y2 = 5; 
 
 		while(self.distance(x1,y1,x2,y2) >= 2):
-			[cop,rob] = self.getNextPose([x1,y1,x2,y2]); 
+			cop = self.getNextPose([x1,y1,x2,y2],True); 
+			rob = self.getNextPose([x1,y1,x2,y2],False)
 			x1 = cop[0]; 
 			y1 = cop[1]; 
 			x2 = rob[0]; 
@@ -345,7 +350,7 @@ class continuousPolicyTranslator():
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(fileName = "cTagAlphas1.npy",hardware = False,tag = True); 
+	c = continuousPolicyTranslator(fileName = "cTagAlphas2.npy",hardware = False,tag = True); 
 	c.simulate(); 
 
 	'''
