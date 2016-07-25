@@ -40,26 +40,32 @@ from CPerseus import Perseus
 import numpy as np 
 from scipy.stats import multivariate_normal
 import copy
-
+import math
 
 
 class continuousPolicyTranslator():
 
-	def __init__(self,fileName= "tmpalphas.npy",numBeliefs = 20, hardware = False):
+	def __init__(self,fileName = "tmpalphas.npy",numBeliefs = 20, hardware = False,tag = True):
 		
 		if("txt" in fileName):
 			self.readAlphas(fileName); 
 		else:
 			self.Gamma = np.load(fileName); 
 		self.hardware = hardware; 
-		self.setInitialBelief();
 		self.nB = numBeliefs; 
-		#self.B.condense(self.nB); 
-		a = Perseus(dis = False);
+
+		if(tag == False):
+			self.setSimpleInitialBelief();
+		else:
+			self.setTagInitialBelief(); 
+
+		a = Perseus(dis = False,tag = tag);
 		self.pz = a.pz; 
 		self.r = a.r; 
 		self.delA = a.delA; 
-		self.delAVar = [[1,0],[0,1]]; 
+		self.delAVar = a.delAVar;  
+		self.tag = tag; 
+
 
 	def continuousDot(self,a,b):
 
@@ -75,29 +81,114 @@ class continuousPolicyTranslator():
 		return g.action; 
 
 
-	#TODO: The actions numbers are all screwed up????
+	def extractRobMove(self,s):
+		x1 = s[0]; 
+		y1 = s[1]; 
+		x2 = s[2]; 
+		y2 = s[3];
+
+
+		#Robot should always move away, with .2 chance of staying still
+
+		if(x1 > x2):
+			if(y1 < y2):
+				return np.random.choice([0,2,4],p = [.4,.4,.2]); 
+			elif(y2 < y1):
+				return np.random.choice([0,3,4], p= [.4,.4,.2]); 
+			elif(y1 == y2):
+				return np.random.choice([0,2,3,4],p = [.4,.2,.2,.2]); 
+		elif(x1 < x2):
+			if(y1 < y2):
+				return np.random.choice([1,2,4],p = [.4,.4,.2]); 
+			elif(y2 < y1):
+				return np.random.choice([1,3,4], p= [.4,.4,.2]); 
+			elif(y1 == y2):
+				return np.random.choice([1,2,3,4],p = [.4,.2,.2,.2]); 
+		elif(x1 == x2):
+			if(y1 < y2):
+				return np.random.choice([2,0,1,4],p = [.4,.2,.2,.2]); 
+			elif(y2 < y1):
+				return np.random.choice([3,0,1,4], p= [.4,.2,.2,.2]); 
+			elif(y1 == y2):
+				return 4; 
+
+
+	def distance(self,x1,y1,x2,y2):
+		a = (x1-x2)*(x1-x2); 
+		b = (y1-y2)*(y1-y2); 
+		return math.sqrt(a+b); 
+
 	def getNextPose(self,pose):
 	
-		x = pose[0]; 
-		y = pose[1]; 
+		if(self.tag):
+			x1 = pose[0]; 
+			y1 = pose[1]; 
+			x2 = pose[2]; 
+			y2 = pose[3]; 
+		else:
+			x = pose[0]; 
+			y = pose[1]; 
 
 	
 		
 		action = self.getAction(); 
 
+		#Should this be here? 
+		if(action == 3): 
+			action = 2; 
+		elif(action == 0):
+			action = 1; 
+		elif(action == 1):
+			action = 0; 
+		elif(action == 2):
+			action = 3;
+
+		print(action);  
+		
 		orient = 0; 
 
 		if(self.hardware):
-			x = float(x)*2.0; 
-			y = float(y)*2.0; 
+			if(self.tag):
+				x1 = float(x1)*2.0; 
+				y1 = float(y1)*2.0; 
+				x2 = float(x2)*2.0; 
+				y2 = float(y2)*2.0; 
+			else:	
+				x = float(x)*2.0; 
+				y = float(y)*2.0; 
 		
-		destX = x + self.delA[action][0]; 
-		destY = y + self.delA[action][1]; 
+		if(self.tag):
+			beta = self.extractRobMove(pose);  
+			destX1 = x1 + self.delA[action][beta][0]; 
+			destY1 = y1 + self.delA[action][beta][1]; 
+			destX2 = x2 + self.delA[action][beta][2]; 
+			destY2 = y2 + self.delA[action][beta][3]; 
 
-	
+			if(destX1 > 9):
+				destX1 = 9; 
+			elif(destX1 < 0):
+				destX1 = 0; 
+			if(destX2 > 9):
+				destX2 = 9; 
+			elif(destX2 < 0):
+				destX2 = 0;
+			if(destY1 > 9):
+				destY1 = 9; 
+			elif(destY1 < 0):
+				destY1 = 0;
+			if(destY2 > 9):
+				destY2 = 9; 
+			elif(destY2 < 0):
+				destY2 = 0;
+
+		else:
+			destX = x + self.delA[action][0]; 
+			destY = y + self.delA[action][1]; 
+
+		
 
 		if(action == 0):
-			actVerb = "Left"; 
+			actVerb = "Left";
 			orient = 180; 
 		elif(action == 1):
 			actVerb = "Right"; 
@@ -111,21 +202,33 @@ class continuousPolicyTranslator():
 		else:
 			actVerb = "Wait";
 
-		self.goalX = destX; 
-		self.goalY = destY; 
+
+		if(self.tag):
+			o = 0; 
+			if(self.distance(x1,y1,x2,y2)):
+				o = 1; 
+			self.beliefUpdate(action,o); 
+		else:
+			self.beliefUpdate(action,int(destX*10+destY)); 
 
 
-		
-		self.beliefUpdate(action,int(destX*10+destY)); 
 
 		if(self.hardware):
-			destX = float(destX)/2.0; 
-			destY = float(destY)/2.0; 
+			if(self.tag):
+				destX1 = float(destX1)/2.0; 
+				destY1 = float(destY1)/2.0; 
+				destX2 = float(destX2)/2.0; 
+				destY2 = float(destY2)/2.0; 
+			else:
+				destX = float(destX)/2.0; 
+				destY = float(destY)/2.0; 
 
 		
 
-
-		return [destX,destY,0,orient];  
+		if(self.tag):
+			return [[destX1,destY1,0,orient],[destX2,destY2,0,orient]]; 
+		else:
+			return [destX,destY,0,orient];  
 
 
 	def covAdd(self,a,b):
@@ -141,10 +244,19 @@ class continuousPolicyTranslator():
 				c[i][j] += b[i][j]; 
 		return c;  
 
-	def setInitialBelief(self):
+	def setSimpleInitialBelief(self):
 		self.B = GM(); 
 		for i in range(0,100):
 			self.B.addG(Gaussian([i/10,i%10],[[1,0],[0,1]],1)); 
+
+	def setTagInitialBelief(self):
+		self.B = GM(); 
+		for i in range(0,100):
+			g = Gaussian(); 
+			g.mean = [0,0,i/10,i%10]; 
+			g.weight = 1; 
+			g.var = np.eye(4)*30; 
+			self.B.addG(g); 
 
 	def readAlphas(self,fileName):
 		file = open(fileName,"r"); 
@@ -184,8 +296,10 @@ class continuousPolicyTranslator():
 
 		for i in self.pz[o].Gs:
 			for j in self.B.Gs:
-				tmp = multivariate_normal.pdf(np.add(np.matrix(j.mean),np.matrix(self.delA[a])).tolist(),i.mean,self.covAdd(self.covAdd(i.var,j.var),self.delAVar));  
-				w = i.weight*j.weight*tmp; 
+				
+				tmp = multivariate_normal.pdf(np.add(np.matrix(j.mean),np.matrix(self.delA[a][0])).tolist(),i.mean,self.covAdd(self.covAdd(i.var,j.var),self.delAVar))  
+				#print(i.weight,j.weight,tmp); 
+				w = i.weight*j.weight*tmp.tolist(); 
 
 				sig = (np.add(np.matrix(i.var).I, np.matrix(self.covAdd(j.var, self.delAVar)).I)).I.tolist(); 
 
@@ -199,25 +313,48 @@ class continuousPolicyTranslator():
 				smean = np.transpose(sig*sstmp3).tolist()[0]; 
 
 				btmp.addG(Gaussian(smean,sig,w)); 
+		#print(btmp.size); 
 		btmp.condense(self.nB); 
-		btmp.normalizeWeights(); 
+		btmp.normalizeWeights();
+		#btmp.display();  
 
 		self.B = btmp; 
 
 
 
 
-	#def simulate(self):
+	def simulate(self):
+
+		#So basically just call getNextPose until the cop catches the robber
+		#Probably do a gaussian around the actual return, to simulate the hardware issuses
+		x1 = 0; 
+		y1 = 0; 
+		x2 = 5; 
+		y2 = 5; 
+
+		while(self.distance(x1,y1,x2,y2) >= 2):
+			[cop,rob] = self.getNextPose([x1,y1,x2,y2]); 
+			x1 = cop[0]; 
+			y1 = cop[1]; 
+			x2 = rob[0]; 
+			y2 = rob[1]; 
+			print(x1,y1,x2,y2); 
 
 
 
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(fileName = "localizationAlphas1.txt",hardware = True); 
+	c = continuousPolicyTranslator(fileName = "cTagAlphas1.npy",hardware = False,tag = True); 
+	c.simulate(); 
 
+	'''
 	print("Check 1"); 
-	print(c.getNextPose([2,2])); 
+	print(c.getNextPose([2,2,5,5])); 
 	print("Check 2"); 
-	print(c.getNextPose([4,0])); 
+	print(c.getNextPose([4,0,2,0])); 
+	'''
+	
+
+
 	 
