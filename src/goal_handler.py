@@ -172,6 +172,7 @@ class GoalHandler(object):
 			# 	rospy.sleep(0.1) #<>TODO: see if anything can be done to avoid adding these sleeps
 			# 	logging.info('waiting to reach goal; looping')
 		elif self.is_at_goal():
+		#else:
 			self.send_goal()
 
 		#if (self.robo_type == "-c") and (self.tapt.distance(self.pose._pose[0],self.pose._pose[1],self.other_pose._pose[0],self.other_pose._pose[1]) < 1):
@@ -228,7 +229,7 @@ class GoalHandler(object):
 		rospy.sleep(2)
 
 	def get_new_goal(self,current_position,other_position,stuck_flag): #<>TODO: refine stuck vs blocked, as the robot can get stuck without technically beiing blocked
-		"""get new goal pose from policy translator module
+		"""get new goal pose from policy translator module for multi-robot case
 		"""
 		logging.info('other robot\'s position: ' + str(other_position))
 		if self.robo_type == '-c':
