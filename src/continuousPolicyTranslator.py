@@ -48,7 +48,7 @@ class continuousPolicyTranslator():
 	def __init__(self,fileName = "tmpalphas.npy",numBeliefs = 20, hardware = False,tag = True):
 		
 		if("txt" in fileName):
-			self.readAlphas(fileName); 
+			self.readAlphas(fileName,tag); 
 		else:
 			self.Gamma = np.load(fileName); 
 		self.hardware = hardware; 
@@ -262,7 +262,7 @@ class continuousPolicyTranslator():
 			g.var = np.eye(4)*30; 
 			self.B.addG(g); 
 
-	def readAlphas(self,fileName):
+	def readAlphas(self,fileName,tag = True):
 		file = open(fileName,"r"); 
 		lines = np.fromfile(fileName,sep = " "); 
 		
@@ -270,28 +270,52 @@ class continuousPolicyTranslator():
 
 		self.Gamma = []; 
 
-		count = 0; 
-		countL = len(lines); 
-		while(count < countL):
-			tmp = lines[count:]; 
-			
-			num = int(tmp[0]); 
-			act = int(tmp[1]); 
-			count = count + 2; 
-			cur = GM(); 
-			cur.action = act; 
-			 
-
-			for i in range(0,num):
-				tmp = lines[count:]
+		if(not tag):
+			count = 0; 
+			countL = len(lines); 
+			while(count < countL):
+				tmp = lines[count:]; 
 				
-				count = count + 7;
+				num = int(tmp[0]); 
+				act = int(tmp[1]); 
+				count = count + 2; 
+				cur = GM(); 
+				cur.action = act; 
+				 
 
-				mean = [int(tmp[0]),int(tmp[1])]; 
-				var = [[int(tmp[2]),int(tmp[3])],[int(tmp[4]),int(tmp[5])]]; 
-				weight = int(tmp[6]); 
-				cur.addG(Gaussian(mean,var,weight)); 
-			self.Gamma += [cur]; 
+				for i in range(0,num):
+					tmp = lines[count:]
+					
+					count = count + 7;
+
+					mean = [int(tmp[0]),int(tmp[1])]; 
+					var = [[int(tmp[2]),int(tmp[3])],[int(tmp[4]),int(tmp[5])]]; 
+					weight = int(tmp[6]); 
+					cur.addG(Gaussian(mean,var,weight)); 
+				self.Gamma += [cur]; 
+		else:
+			count = 0; 
+			countL = len(lines); 
+			while(count < countL):
+				tmp = lines[count:]; 
+				
+				num = int(tmp[0]); 
+				act = int(tmp[1]); 
+				count = count + 2; 
+				cur = GM(); 
+				cur.action = act; 
+				 
+
+				for i in range(0,num):
+					tmp = lines[count:]
+					
+					count = count + 21;
+
+					mean = [int(tmp[0]),int(tmp[1]),int(tmp[2]),int(tmp[3])]; 
+					var = [[int(tmp[4]),int(tmp[5]),int(tmp[6]),int(tmp[7])],[int(tmp[8]),int(tmp[9]),int(tmp[10]),int(tmp[11])],[int(tmp[12]),int(tmp[13]),int(tmp[14]),int(tmp[15])],[int(tmp[16]),int(tmp[17]),int(tmp[18]),int(tmp[19])]]; 
+					weight = int(tmp[20]); 
+					cur.addG(Gaussian(mean,var,weight)); 
+				self.Gamma += [cur]; 
 
 
 	def beliefUpdate(self,a,o):
@@ -350,7 +374,7 @@ class continuousPolicyTranslator():
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(fileName = "cTagAlphas2.npy",hardware = False,tag = True); 
+	c = continuousPolicyTranslator(fileName = "cTagAlphas1.txt",hardware = False,tag = True); 
 	c.simulate(); 
 
 	'''
