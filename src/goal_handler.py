@@ -239,13 +239,13 @@ class GoalHandler(object):
 			#if stuck_flag:
 			#	return self.pt.getNextPose(pose,stuck_flag)
 			#else:
-			return self.pt.getNextPose(pose,)
+			return self.pt.getNextPose(pose,True)
 		elif self.robo_type == '-r':
-			pose = [other_position,current_position]	
+			pose = [other_position,current_position]
 			#if stuck_flag:
 			#	return self.pt.getNextPose(other_position,current_position)
 			#else:
-			return self.pt.getNextPose(pose,)
+			return self.pt.getNextPose(pose,False)
 
 	def get_new_goal(self,current_position,stuck_flag):
 		"""get new goal pose from policy translator module for single robot case
