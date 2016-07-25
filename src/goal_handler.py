@@ -107,6 +107,7 @@ class GoalHandler(object):
 		handler.setFormatter(logging.Formatter(logger_format))
 		logging.getLogger().addHandler(handler)
 
+		self.secondary_behavior = False
 		self.stuck_buffer = 5
 		self.stuck_count = self.stuck_buffer
 		self.current_status = 3 #<>NOTE: DEPRECEATED
@@ -165,7 +166,7 @@ class GoalHandler(object):
 		if self.multi:
 			self.other_pose.tf_update()
 		logging.info(self.robot + '\'s position: ' + str(self.pose._pose))
-		if self.is_stuck():
+		if self.is_stuck() and self.secondary_behavior:
 			self.send_goal(True)
 			# while not self.is_at_goal(): #<>NOTE: these lines will re-enable the old obstacle avoidance abiltiy until better method is developed
 			# 	self.pose.tf_update()
@@ -232,16 +233,19 @@ class GoalHandler(object):
 		"""get new goal pose from policy translator module for multi-robot case
 		"""
 		logging.info('other robot\'s position: ' + str(other_position))
+
 		if self.robo_type == '-c':
-			if stuck_flag:
-				return self.tapt.getNextCopPose(current_position,other_position,stuck_flag)
-			else:
-				return self.tapt.getNextCopPose(current_position,other_position)
+			pose = [current_position,other_position]
+			#if stuck_flag:
+			#	return self.pt.getNextPose(pose,stuck_flag)
+			#else:
+			return self.pt.getNextPose(pose,)
 		elif self.robo_type == '-r':
-			if stuck_flag:
-				return self.tapt.getNextRobberPose(other_position,current_position)
-			else:
-				return self.tapt.getNextRobberPose(other_position,current_position)
+			pose = [other_position,current_position]	
+			#if stuck_flag:
+			#	return self.pt.getNextPose(other_position,current_position)
+			#else:
+			return self.pt.getNextPose(pose,)
 
 	def get_new_goal(self,current_position,stuck_flag):
 		"""get new goal pose from policy translator module for single robot case
