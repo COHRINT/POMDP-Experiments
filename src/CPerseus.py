@@ -321,19 +321,30 @@ class Perseus:
 	def buildTagRewards(self):
 		self.r = GM(); 
 
-		sig = 10.0; 
+		sig = 1.0; 
 		ind = sig*(9.0/10.0); 
 		var = [[sig,0,ind,0],[0,sig,0,ind],[ind,0,sig,0],[0,ind,0,sig]]; 
 
 		ms = [[0,0,0,0],[0,9,0,9],[9,0,9,0],[9,9,9,9],[4.5,4.5,4.5,4.5]]; 
 		for i in ms:
-			self.r.addG(Gaussian(i,var,1)); 
+			self.r.addG(Gaussian(i,var,10)); 
+
+
+		var = np.eye(4)*5; 
+
+		ms = [[0,0,0,0],[0,9,0,9],[9,0,9,0],[9,9,9,9],[4.5,4.5,4.5,4.5]]; 
+		for i in ms:
+			self.r.addG(Gaussian(i,var,-1)); 
+
+
 
 		
 
 
 	def buildTagInitialBeliefs(self,nb = 20):
-		self.B = [0]*(nb+1); 
+		
+		'''
+		self.B = [0]*(nb+4); 
 		self.B[0] = GM(); 
 		for i in range(0,100):
 			g = Gaussian(); 
@@ -342,13 +353,45 @@ class Perseus:
 			g.var = np.eye(4)*30; 
 			self.B[0].addG(g); 
 
-		for i in range(1,nb+1):
+		self.B[1] = GM(); 
+		for i in range(0,100):
+			g = Gaussian(); 
+			g.mean = [9,0,i/10,i%10]; 
+			g.weight = 1; 
+			g.var = np.eye(4)*30; 
+			self.B[1].addG(g); 
+
+		self.B[2] = GM(); 
+		for i in range(0,100):
+			g = Gaussian(); 
+			g.mean = [0,9,i/10,i%10]; 
+			g.weight = 1; 
+			g.var = np.eye(4)*30; 
+			self.B[2].addG(g); 
+
+		self.B[3] = GM(); 
+		for i in range(0,100):
+			g = Gaussian(); 
+			g.mean = [9,9,i/10,i%10]; 
+			g.weight = 1; 
+			g.var = np.eye(4)*30; 
+			self.B[3].addG(g); 
+
+
+		for i in range(4,nb+4):
 			self.B[i] = GM(); 
 			for j in range(0,20):
 				cov = np.eye(4)*3; 
 				self.B[i].addG(Gaussian([random.random()*10,random.random()*10,random.random()*10,random.random()*10],cov)); 
-
-
+		'''
+		
+		self.B = [0]*(nb);
+		for i in range(0,nb):
+			self.B[i] = GM(); 
+			for j in range(0,40):
+				cov = np.eye(4)*random.random()*8.0; 
+				self.B[i].addG(Gaussian([random.random()*10.0,random.random()*10.0,random.random()*10.0,random.random()*10.0],cov)); 
+		
 
 	
 
@@ -469,7 +512,8 @@ class Perseus:
 								sigvar = (np.matrix(sig)+np.matrix(self.delAVar)).tolist(); 
 							else:
 								robMove = self.extractRobMove(ss); 
-								smean = (np.transpose(np.matrix(ss)) - np.matrix(self.delA[a][robMove])).tolist(); 
+								#TODO: You switched the - to a + here
+								smean = (np.transpose(np.matrix(ss)) + np.matrix(self.delA[a][robMove])).tolist(); 
 								sigvar = (np.matrix(sig)+np.matrix(self.delAVar)).tolist(); 
 							
 							als1[j][a][o].addG(Gaussian(smean[0],sigvar,weight)); 
@@ -944,14 +988,14 @@ def convertVectorToGrid(b):
 	return a; 
 
 if __name__ == "__main__":
-	a = Perseus(nB = 5,dis = False, tag = True); 
-	a.solve(N = 10,verbose = True,maxMix = 50, finalMix = 100);
+	a = Perseus(nB = 10,dis = False, tag = True); 
+	a.solve(N = 10,verbose = True,maxMix = 20, finalMix = 100);
 	#print(""); 
 	#print("Policy Generated"); 
-	a.Gamma[0].display();   
+	#a.Gamma[0].display();   
 	
-	file = "cTagAlphas2.txt"
-	file2 = "cTagAlphas2.npy"; 
+	file = "cTagAlphas3.txt"
+	file2 = "cTagAlphas3.npy"; 
 	a.printToSimpleAlphas(file); 
 
 	f = open(file2,"w"); 
