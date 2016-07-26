@@ -41,11 +41,12 @@ import numpy as np
 from scipy.stats import multivariate_normal
 import copy
 import math
-
+from scipy.stats import norm
+import matplotlib.pyplot as plt
 
 class continuousPolicyTranslator():
 
-	def __init__(self,fileName = "tmpalphas.npy",numBeliefs = 20, hardware = False,tag = True):
+	def __init__(self,fileName = "tmpalphas.npy",numBeliefs = 20, initBelief = [0,0], hardware = False,tag = True):
 		
 		if("txt" in fileName):
 			self.readAlphas(fileName,tag); 
@@ -57,7 +58,7 @@ class continuousPolicyTranslator():
 		if(tag == False):
 			self.setSimpleInitialBelief();
 		else:
-			self.setTagInitialBelief(); 
+			self.setTagInitialBelief(initBelief); 
 
 		a = Perseus(dis = False,tag = tag);
 		self.pz = a.pz; 
@@ -133,15 +134,6 @@ class continuousPolicyTranslator():
 		
 		action = self.getAction(); 
 
-		#Should this be here? 
-		if(action == 3): 
-			action = 2; 
-		elif(action == 0):
-			action = 1; 
-		elif(action == 1):
-			action = 0; 
-		elif(action == 2):
-			action = 3;
 
 		#print(action);  
 		
@@ -253,14 +245,18 @@ class continuousPolicyTranslator():
 		for i in range(0,100):
 			self.B.addG(Gaussian([i/10,i%10],[[1,0],[0,1]],1)); 
 
-	def setTagInitialBelief(self):
+	def setTagInitialBelief(self,pose = [0,0]):
 		self.B = GM(); 
+		self.B.addG(Gaussian([pose[0],pose[1],4.5,4.5],np.eye(4)*5,1)); 
+		'''
 		for i in range(0,100):
 			g = Gaussian(); 
-			g.mean = [0,0,i/10,i%10]; 
+			g.mean = [pose[0],pose[1],i/10,i%10]; 
 			g.weight = 1; 
 			g.var = np.eye(4)*30; 
 			self.B.addG(g); 
+		'''
+
 
 	def readAlphas(self,fileName,tag = True):
 		file = open(fileName,"r"); 
@@ -374,16 +370,38 @@ class continuousPolicyTranslator():
 
 
 if __name__ == "__main__":
-	c = continuousPolicyTranslator(fileName = "cTagAlphas1.txt",hardware = False,tag = True); 
+	c = continuousPolicyTranslator(fileName = "cTagAlphas3.npy",hardware = False,tag = True,initBelief = [9,9]); 
 	c.simulate(); 
 
+
 	'''
-	print("Check 1"); 
-	print(c.getNextPose([2,2,5,5])); 
-	print("Check 2"); 
-	print(c.getNextPose([4,0,2,0])); 
+	plt.figure("1"); 
+	x = [i for i in range(-500,500)]; 
+	for i in range(0,1000):
+		x[i] = float(x[i])/100.0; 
+		x[i] = x[i] + 1; 
+	y = norm.pdf(1,x,1); 
+	plt.plot(x,y); 
+
+	plt.figure("2")
+
+	x1 = [i for i in range(-500,500)];
+	for i in range(0,1000):
+		x1[i] = float(x1[i])/100.0; 
+		x1[i] = x1[i] + 1; 
+	y1 = norm.pdf(x1,1,1); 
+	plt.plot(x1,y1);  
+
+	plt.show(); 
+
+
+	z = [0 for i in range(0,1000)];  
+	for i in range(0,len(y)):
+		z[i] = (y[i]-y1[i])*(y[i]-y1[i]); 
+	print(sum(z)); 	
 	'''
-	
+
+
 
 
 	 
