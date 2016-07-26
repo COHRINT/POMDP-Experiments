@@ -62,6 +62,10 @@ import random
 #from discretePolicyTranslator import discretePolicyTranslator
 #from tagAvoidPolicyTranslator import tagAvoidPolicyTranslator
 from continuousPolicyTranslator import continuousPolicyTranslator
+import CPerseus
+from CPerseus import GM
+from CPerseus import Gaussian
+from CPerseus import Perseus
 from geometry_msgs.msg import PoseStamped
 from actionlib_msgs.msg import GoalStatusArray
 import std_msgs.msg
@@ -166,7 +170,7 @@ class GoalHandler(object):
 		if self.multi:
 			self.other_pose.tf_update()
 		logging.info(self.robot + '\'s position: ' + str(self.pose._pose))
-		if self.is_stuck() and self.secondary_behavior:
+		if self.is_stuck():
 			self.send_goal(True)
 			# while not self.is_at_goal(): #<>NOTE: these lines will re-enable the old obstacle avoidance abiltiy until better method is developed
 			# 	self.pose.tf_update()
@@ -235,19 +239,19 @@ class GoalHandler(object):
 		logging.info('other robot\'s position: ' + str(other_position))
 
 		if self.robo_type == '-c':
-			pose = [current_position,other_position]
+			pose = [current_position[0],current_position[1],other_position[0],other_position[1]]
 			#if stuck_flag:
 			#	return self.pt.getNextPose(pose,stuck_flag)
 			#else:
 			return self.pt.getNextPose(pose,True)
 		elif self.robo_type == '-r':
-			pose = [other_position,current_position]
+			pose = [other_position[0],other_position[1],current_position[0],current_position[1]]
 			#if stuck_flag:
 			#	return self.pt.getNextPose(other_position,current_position)
 			#else:
 			return self.pt.getNextPose(pose,False)
 
-	def get_new_goal(self,current_position,stuck_flag):
+	def get_new_goal_singular(self,current_position,stuck_flag):
 		"""get new goal pose from policy translator module for single robot case
 		"""
 		if stuck_flag:
