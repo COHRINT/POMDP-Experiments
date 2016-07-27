@@ -74,7 +74,7 @@ class Perseus:
 			#each alpha is a GM
 			self.Gamma = copy.deepcopy(self.r);
 			self.Gamma.action = 0; 
-			self.Gamma = [self.Gamma] + [self.Gamma]; 
+			self.Gamma = [self.Gamma]# + [self.Gamma]; 
 
 			
 			
@@ -91,7 +91,7 @@ class Perseus:
 		for counter in range(0,N):
 	
 			if(verbose):
-				print(counter); 
+				print("Iteration: " + str(counter+1)); 
 
 			if(self.discrete):
 				bestAlphas = [[0 for i in range(0,len(self.B[0]))] for j in range(0,len(self.B))]
@@ -114,9 +114,7 @@ class Perseus:
 
 			BTilde = copy.deepcopy(self.B); 
 
-			if(verbose):
-				print("Initial Step Complete"); 
-
+		
 			while(len(BTilde) > 0):
 
 				b = random.choice(BTilde); 
@@ -156,7 +154,6 @@ class Perseus:
 				GammaNew += [al]; 
 
 			if(verbose):
-				print("Second Step Complete");
 				print("Number of Alphas: " + str(len(GammaNew))); 
 				av = 0; 
 				for i in range(0,len(GammaNew)):
@@ -180,6 +177,8 @@ class Perseus:
 					av += GammaNew[i].size; 
 				av = av/len(GammaNew);  
 				print("Reduced number of mixands: " + str(av)); 
+				print("Actions: " + str([GammaNew[i].action for i in range(0,len(GammaNew))])); 
+				print("");
 
 			self.Gamma = copy.deepcopy(GammaNew); 
 
@@ -329,13 +328,13 @@ class Perseus:
 		for i in ms:
 			self.r.addG(Gaussian(i,var,10)); 
 
-
+		'''
 		var = np.eye(4)*5; 
 
 		ms = [[0,0,0,0],[0,9,0,9],[9,0,9,0],[9,9,9,9],[4.5,4.5,4.5,4.5]]; 
 		for i in ms:
-			self.r.addG(Gaussian(i,var,-1)); 
-
+			self.r.addG(Gaussian(i,var,-0.5)); 
+		'''
 
 
 		
@@ -508,14 +507,14 @@ class Perseus:
 							
 
 							if(self.tag != True):
-								smean = (np.transpose(np.matrix(ss)) - np.matrix(self.delA[a])).tolist(); 
+								smean = (np.transpose(np.matrix(ss)) + np.matrix(self.delA[a])).tolist(); 
 								sigvar = (np.matrix(sig)+np.matrix(self.delAVar)).tolist(); 
 							else:
 								robMove = self.extractRobMove(ss); 
 								#TODO: You switched the - to a + here
 								smean = (np.transpose(np.matrix(ss)) + np.matrix(self.delA[a][robMove])).tolist(); 
 								sigvar = (np.matrix(sig)+np.matrix(self.delAVar)).tolist(); 
-							
+								
 							als1[j][a][o].addG(Gaussian(smean[0],sigvar,weight)); 
 
 		GammaNew = []; 
@@ -535,7 +534,8 @@ class Perseus:
 			suma.scalerMultiply(self.discount); 
 			suma.addGM(R); 
 
-			tmp = self.continuousDot(suma,b);  
+			tmp = self.continuousDot(suma,b);
+			 
 			if(tmp > bestVal):
 				bestAct = a; 
 				bestGM = suma; 
@@ -626,7 +626,7 @@ class Perseus:
 	def continuousDot(self,a,b):
 
 		suma = 0; 
-		for k in range(0,a.size-1):
+		for k in range(0,a.size):
 			for l in range(0,b.size):
 				suma += a.Gs[k].weight*b.Gs[l].weight*multivariate_normal.pdf(b.Gs[l].mean,a.Gs[k].mean,self.covAdd(a.Gs[k].var,b.Gs[l].var)); 
 		return suma; 
@@ -988,19 +988,22 @@ def convertVectorToGrid(b):
 	return a; 
 
 if __name__ == "__main__":
-	a = Perseus(nB = 10,dis = False, tag = True); 
-	a.solve(N = 10,verbose = True,maxMix = 20, finalMix = 100);
+	a = Perseus(nB = 40,dis = False, tag = True); 
+
+
+	a.solve(N = 5,verbose = True,maxMix = 10, finalMix = 100);
 	#print(""); 
 	#print("Policy Generated"); 
 	#a.Gamma[0].display();   
 	
-	file = "cTagAlphas3.txt"
-	file2 = "cTagAlphas3.npy"; 
+	file = "cTagAlphas4.txt"
+	file2 = "cTagAlphas4.npy"; 
 	a.printToSimpleAlphas(file); 
 
 	f = open(file2,"w"); 
 	np.save(f,a.Gamma); 
 
+	
 
 	'''
 	sig = 10.0; 
