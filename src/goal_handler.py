@@ -169,6 +169,8 @@ class GoalHandler(object):
 		self.pose.tf_update()
 		if self.multi:
 			self.other_pose.tf_update()
+		if self.robo_type == '-c':
+			self.is_caught()
 		logging.info(self.robot + '\'s position: ' + str(self.pose._pose))
 		if self.is_stuck():
 			self.send_goal(True)
@@ -232,6 +234,14 @@ class GoalHandler(object):
 		self.pub.publish(new_goal)
 		logging.info("sent goal: " + str(self.goal_point))
 		rospy.sleep(2)
+
+	def is_caught(self):
+		"""checks if cop has caught robber and, if this is the case, begins shutdown
+		"""
+		if math.sqrt((abs(self.other_pose._pose[0] - self.pose._pose[0]))**2 + \
+				(abs(self.other_pose._pose[1] - self.pose._pose[1]))**2) < 1:
+			logging.info("Robber has been caught!")
+			rospy.signal_shutdown("Robber has been caught!")
 
 	def get_new_goal(self,current_position,other_position,stuck_flag): #<>TODO: refine stuck vs blocked, as the robot can get stuck without technically beiing blocked
 		"""get new goal pose from policy translator module for multi-robot case
