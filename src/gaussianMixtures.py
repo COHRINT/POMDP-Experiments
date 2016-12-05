@@ -6,6 +6,10 @@ from random import random;
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal as mvn
 import warnings
+import math
+import copy
+import time
+from numpy.linalg import inv,det
 
 
 class Gaussian:
@@ -47,19 +51,19 @@ class GM:
 	def getMeans(self):
 		ans = []; 
 		for g in self.Gs:
-			ans += [[g.mean]]; 
+			ans.append(g.mean); 
 		return ans; 
 
 	def getVars(self):
 		ans = []; 
 		for g in self.Gs:
-			ans += [[g.var]]; 
+			ans.append(g.var); 
 		return ans; 
 
 	def getWeights(self):
 		ans = []; 
 		for g in self.Gs:
-			ans += [g.weight]; 
+			ans.append(g.weight); 
 		return ans; 
 
 
@@ -67,17 +71,19 @@ class GM:
 	def clean(self):
 
 		for g in self.Gs:
-			if(not isinstance(g.mean,list)):
+			if(not isinstance(g.mean,list) and not isinstance(g.mean,int) and not isinstance(g.var,float)):
 				g.mean = g.mean.tolist(); 
 
-			if(not isinstance(g.var,list)):
+			if(not isinstance(g.var,list) and not isinstance(g.var,int) and not isinstance(g.var,float)):
 				g.var = g.var.tolist(); 
 
-			while(len(g.mean) != len(g.var)):
-				g.mean = g.mean[0]; 
+			if(not isinstance(g.mean,int) and not isinstance(g.var,float)):
+				while(len(g.mean) != len(g.var)):
+					g.mean = g.mean[0]; 
 
-			for i in range(0,len(g.var)):
-				g.var[i][i] = abs(g.var[i][i]); 
+			if(not isinstance(g.var,int) and not isinstance(g.var,float)):
+				for i in range(0,len(g.var)):
+					g.var[i][i] = abs(g.var[i][i]); 
 
 
 
@@ -91,6 +97,15 @@ class GM:
 					meanVal = res[i][j]; 
 					MAP = [i/20,j/20]; 
 		return MAP; 
+
+	def findMAPN(self):
+		
+		cands = [0]*self.size; 
+		for i in range(0,self.size):
+			for j in range(0,self.size):
+				cands[i] += mvn.pdf(self.Gs[i].mean,self.Gs[j].mean,self.Gs[j].var)*self.Gs[j].weight; 
+		best = cands.index(max(cands)); 
+		return(self.Gs[best].mean); 
 
 
 	def plot(self,low = -20,high = 20,num = 1000,vis = True):
@@ -134,7 +149,61 @@ class GM:
 		else:
 			return x,y,c; 
 
-	
+	def slice2DFrom4D(self,low = [0,0],high = [5,5],res = 100, dims = [2,3],vis = True,retGS = False):
+
+		newGM = GM(); 
+		for g in self.Gs:
+			mean = [g.mean[dims[0]],g.mean[dims[1]]]; 
+			var = [[g.var[dims[0]][dims[0]],g.var[dims[0]][dims[1]]],[g.var[dims[1]][dims[0]],g.var[dims[1]][dims[1]]]]
+			weight = g.weight; 
+			newGM.addG(Gaussian(mean,var,weight)); 
+		if(vis):
+			newGM.plot2D(low = low,high = high,res=res,vis = vis,xlabel = 'RobberX',ylabel = 'RobberY',title = 'Cops Belief of Robber'); 
+		elif(retGS):
+			return newGM;
+		else:
+			return newGM.plot2D(low = low,high = high,res=res,vis = vis,xlabel = 'RobberX',ylabel = 'RobberY',title = 'Cops Belief of Robber'); 
+
+
+	def marginalizeTo2DFrom4D(self,low = [0,0],high = [5,5],res = 50):
+		#Sums out the first two dims
+		x, y = np.mgrid[low[0]:high[0]:(float(high[0])/res), low[1]:high[1]:(float(high[1])/res)]
+		x2, y2 = np.mgrid[low[0]:high[0]:(float(high[0])/res), low[1]:high[1]:(float(high[1])/res)]
+
+		pos = np.dstack((x,x2,y,y2))  
+
+
+		c = [[[[0 for i in range(0,res)] for k in range(0,res)] for l in range(0,res)] for j in range(0,res)]; 
+
+		
+
+		A = np.linspace(low[0],high[0]-high[0]/res,res).tolist();
+		B = np.linspace(low[1],high[1]-high[1]/res,res).tolist();  
+		
+		
+		for g in self.Gs:
+			for i in range(0,res):
+				for j in range(0,res):
+					for k in range(0,res):
+						for l in range(0,res):
+							c[i][j][k][l] +=mvn.pdf([i,j,k,l],g.mean,g.var)*g.weight; 
+		
+		d = [[0 for i in range(0,res)] for j in range(0,res)]; 	
+
+
+		
+		for i in range(0,res):
+			for j in range(0,res):
+				for k in range(0,res):
+					for l in range(0,res):
+						d[k][l] += c[i][j][k][l]; 
+		
+
+		 
+
+		return x2,y2,d; 
+		
+
 
 	def normalizeWeights(self):
 		suma = 0; 
@@ -199,10 +268,64 @@ class GM:
 
 
 	def distance2D(self,a,b):
-		ans = (a[0] - b[0])**2 + (a[1]-b[1])**2; 
+		ans = math.sqrt((a[0] - b[0])**2 + (a[1]-b[1])**2); 
 		return ans; 
 
+	#General N-dimensional euclidean distance
+	def distance(self,a,b):
+		dist = 0; 
 
+		for i in range(0,len(a)):
+			dist += (a[i]-b[i])**2; 
+		dist = math.sqrt(dist); 
+		return dist; 
+	
+	#General N-dimensional
+	def kmeansCondensationN(self,k=10,lowInit=None,highInit = None):
+		
+		if(lowInit == None):
+			lowInit = [0]*len(self.Gs[0].mean);
+		if(highInit == None):
+			highInit = [5]*len(self.Gs[0].mean)
+
+		'''
+		#try removing any outside of the area?
+		toRem = []; 
+		for g in self.Gs:
+			for i in range(0,len(highInit)):
+				if(g.mean[i] > highInit[i] or g.mean[i] < lowInit[i]):
+					toRem.append(g); 
+					break; 
+
+		for g in toRem:
+			if(g in self.Gs):
+				self.Gs.remove(g); 
+		'''
+
+		means = [0]*k; 
+
+		for i in range(0,k):
+			tmp = []; 
+			for j in range(0,len(self.Gs[0].mean)):
+				tmp.append(random()*(highInit[j]-lowInit[j]) + lowInit[j]); 
+			means[i] = tmp; 
+
+
+		clusters = [GM() for i in range(0,k)]; 
+		for g in self.Gs:
+			clusters[np.argmin([self.distance(g.mean,means[j]) for j in range(0,k)])].addG(g); 
+
+		for c in clusters:
+			c.condense(1); 
+
+		ans = GM(); 
+		for c in clusters:
+			ans.addGM(c);  
+
+		ans.action = self.action; 
+
+		return ans;
+	
 	def kmeansCondensation(self,k = 10,lowInit = [0,0], highInit = [5,5]):
 		#only pursues a single clustering step, does not attempt to converge
 
@@ -236,6 +359,7 @@ class GM:
 
 		#condense each cluster
 		for c in clusters:
+			print(clusters.index(c))
 			c.condense(1); 
 
 		#add each cluster back together
@@ -247,8 +371,7 @@ class GM:
 
 		#return big cluster
 		return ans; 
-
-
+	
 
 	def printClean(self,slices):
 		slices = str(slices); 
@@ -476,6 +599,138 @@ class GM:
 				c[i] = a[i]-b[i]; 
 			return c; 
 
+	
+
+
+	def Estep(self,weight,bias,prior_mean,prior_var,alpha = 0.5,zeta_c = 1,modelNum=0):
+		
+		#start the VB EM step
+		lamb = [0]*len(weight); 
+
+		for i in range(0,len(weight)):
+			lamb[i] = self._lambda(zeta_c[i]); 
+
+		hj = 0;
+
+		suma = 0; 
+		for c in range(0,len(weight)):
+			if(modelNum != c):
+				suma += weight[c]; 
+
+		tmp2 = 0; 
+		for c in range(0,len(weight)):
+			tmp2+=lamb[c]*(alpha-bias[c])*weight[c]; 
+	 
+		hj = 0.5*(weight[modelNum]-suma)+2*tmp2; 
+
+
+
+
+		Kj = 0; 
+		for c in range(0,len(weight)):
+			Kj += lamb[c]*weight[c]*weight[c]; 
+		Kj = Kj*2; 
+
+		Kp = prior_var**-1; 
+		hp = Kp*prior_mean; 
+
+		Kl = Kp+Kj; 
+		hl = hp+hj; 
+
+		mean = (Kl**-1)*hl; 
+		var = Kl**-1; 
+
+
+		yc = [0]*len(weight); 
+		yc2= [0]*len(weight); 
+
+		for c in range(0,len(weight)):
+			yc[c] = weight[c]*mean + bias[c]; 
+			yc2[c] = weight[c]*(var + mean*mean)*weight[c] + 2*weight[c]*mean*bias[c] + bias[c]**2; 
+
+
+		return [mean,var,yc,yc2]; 
+
+
+	def Mstep(self,m,yc,yc2,zeta_c,alpha,steps):
+
+		z = zeta_c; 
+		a = alpha; 
+
+		for i in range(0,steps):
+			for c in range(0,len(yc)):
+				z[c] = math.sqrt(yc2[c] + a**2 - 2*a*yc[c]); 
+
+			num_sum = 0; 
+			den_sum = 0; 
+			for c in range(0,len(yc)):
+				num_sum += self._lambda(z[c])*yc[c]; 
+				den_sum += self._lambda(z[c]); 
+
+			a = ((m-2)/4 + num_sum)/den_sum; 
+
+		return [z,a]
+
+
+	def _lambda(self,zeta):
+		return (1/(2*zeta))*(1/(1+math.exp(-zeta)) - 1/2);
+
+
+	def calcCHat(self,prior_mean,prior_var,mean,var,alpha,zeta_c,yc,yc2,mod):
+		prior_var = np.matrix(prior_var); 
+		prior_mean = np.matrix(prior_mean); 
+		var_hat = np.matrix(var); 
+		mu_hat = np.matrix(mean); 
+
+		
+		#KLD = 0.5*(np.log(prior_var/var) + prior_var**-1*var + (prior_mean-mean)*(prior_var**-1)*(prior_mean-mean)); 
+
+		KLD = 0.5 * (np.log(det(prior_var) / det(var_hat)) +
+							np.trace(inv(prior_var) .dot (var_hat)) +
+							(prior_mean - mu_hat).T .dot (inv(prior_var)) .dot
+							(prior_mean - mu_hat));
+
+
+		suma = 0; 
+		for c in range(0,len(zeta_c)):
+			suma += 0.5 * (alpha + zeta_c[c] - yc[c]) \
+	                    - self._lambda(zeta_c[c]) * (yc2[c] - 2 * alpha
+	                    * yc[c] + alpha ** 2 - zeta_c[c] ** 2) \
+	                    - np.log(1 + np.exp(zeta_c[c])) 
+		return yc[mod] - alpha + suma - KLD + 1; 
+
+		
+
+
+	def numericalProduct(self,likelihood,x):
+		prod = [0 for i in range(0,len(likelihood))]; 
+
+		for i in range(0,len(x)):
+			prod[i] = self.pointEval(x[i])*likelihood[i]; 
+		return prod; 
+
+
+	def runVB(self,weight,bias,alpha,zeta_c,modelNum):
+		post = GM(); 
+		
+		for g in self.Gs:
+			prevLogCHat = -1000; 
+
+			count = 0; 
+			while(count < 100000):
+				
+				count = count+1; 
+				[mean,var,yc,yc2] = self.Estep(weight,bias,g.mean,g.var,alpha,zeta_c,modelNum =model);
+				[zeta_c,alpha] = self.Mstep(len(weight),yc,yc2,zeta_c,alpha,steps = 20);
+				logCHat = self.calcCHat(g.mean,g.var,mean,var,alpha,zeta_c,yc,yc2,mod=model); 
+				if(abs(prevLogCHat - logCHat) < 0.00001):
+					break; 
+				else:
+					prevLogCHat = logCHat; 
+
+			post.addG(Gaussian(mean,var,g.weight*np.exp(logCHat).tolist()[0][0]))
+			
+		return post;
 
 
 
@@ -483,54 +738,51 @@ class GM:
 
 if __name__ == "__main__":
 
-	g1 = GM(); 
-	var = [[1,.8],[.8,1]]; 
-
-
-	for i in range(-1,7):
-		g1.addG(Gaussian([i,i],var,1)); 
-
-	g2 = GM(); 
-	for i in range(1,13):
-		for j in range(-1,7):
-			g2.addG(Gaussian([j,j+i],var,1)); 
-			g2.addG(Gaussian([j,j-i],var,1)); 
-
-	#gSum = g1.addGM(g2); 
-
-
-
-	c = [[0 for i in range(0,500)] for j in range(0,500)]; 	
-	d = [[0 for i in range(0,500)] for j in range(0,500)]; 	
-	e = [[0 for i in range(0,500)] for j in range(0,500)]; 	
-
-	x, y = np.mgrid[0:5:0.01, 0:5:0.01]
-
-
-
-	pos = np.dstack((x, y)) 
-	
-	for g in g1.Gs:
-		c += mvn.pdf(pos,g.mean,g.var)*g.weight; 
 	
 	
-	for g in g2.Gs: 
-		d += mvn.pdf(pos,g.mean,g.var)*g.weight;
+
+	#build a softmax model
+	weight = [0,4,8]; 
+	bias = [-5,5,0];
+	zeta_c = [6,2,4]; 
+	model = 0; 
+
+	prior = GM([0,-2],[1,0.5],[1,0.5]); 
+	model = 2;
+
+	alpha = 3;
+	
+	x = [i/10 - 5 for i in range(0,100)]; 
+	softmax = [[0 for i in range(0,len(x))] for j in range(0,len(weight))];  
+	for i in range(0,len(x)):
+		tmp = 0; 
+		for j in range(0,len(weight)):
+			tmp += math.exp(weight[j]*x[i] + bias[j]);
+		for j in range(0,len(weight)):
+			softmax[j][i] = math.exp(weight[j]*x[i] + bias[j]) /tmp;
 	
 
+	post = prior.runVB(weight,bias,alpha,zeta_c,modelNum =model);
+	numApprox = prior.numericalProduct(softmax[model],x); 
 
-	
-	fig1 = plt.figure(); 
-	plt.contourf(x,y,c,cmap = 'viridis'); 
-	plt.colorbar(); 
-
-	fig2 = plt.figure(); 
-	plt.contourf(x,y,d,cmap = 'viridis'); 
-	plt.colorbar(); 
-
-	fig3 = plt.figure(); 
-	plt.contourf(x,y,c+d,cmap = 'viridis'); 
-	plt.colorbar(); 
+	modelLabels = ['left','near','right']; 
+	labels = ['likelihood','prior','VB Posterior','Numerical Posterior']; 
+	pri = prior.plot(low = -5, high = 5,num = len(x),vis = False);
+	pos = post.plot(low = -5, high = 5,num = len(x),vis = False);
+	plt.plot(x,softmax[model]); 
+	plt.plot(x,pri);
+	plt.plot(x,pos);  
+	plt.plot(x,numApprox); 
+	plt.ylim([0,1.1])
+	plt.xlim([-5,5])
+	plt.title("Fusion of prior with: " + modelLabels[model]); 
+	plt.legend(labels); 
 	plt.show(); 
+
+	
+
+
+
+
 
 
