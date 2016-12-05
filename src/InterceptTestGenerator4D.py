@@ -52,7 +52,8 @@ class InterceptTestGenerator:
 
 	def __init__(self,beliefFile = None,dis = 0.9,gen=False,altObs = True,qGen = True):
 		
-		 
+		fig,ax = plt.subplots(); 
+		self.axes = ax; 
 
 		#Initialize exit flag
 		self.exitFlag = False; 
@@ -718,7 +719,7 @@ class InterceptTestGenerator:
 		return btmp; 
 
 	def distance(self,x1,y1,x2,y2):
-		dist = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);  
+		dist = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2); 
 		dist = math.sqrt(dist); 
 		return dist; 
 
@@ -726,7 +727,6 @@ class InterceptTestGenerator:
 		if(self.b == None):
 			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,4,0],[0,0,0,4]],1); 
 		act = self.getQMDPSecondaryAction(self.b,exclude); 
-		print(act); 
 		x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
 				
 		if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
@@ -741,6 +741,36 @@ class InterceptTestGenerator:
 			z = 4;
 
 		self.b = self.beliefUpdate(self.b,act,z); 
+
+		x[0] = min(x[0],5); 
+		x[0] = max(x[0],0); 
+		x[1] = min(x[1],5); 
+		x[1] = max(x[1],0);
+		x[2] = min(x[2],5); 
+		x[2] = max(x[2],0); 
+		x[3] = min(x[3],5); 
+		x[3] = max(x[3],0);
+
+
+		xlabel = 'X Position';
+		ylabel = 'Y Position';
+		title = 'Belief Animation';
+
+		[xx,yy,c] = self.b.slice2DFrom4D(vis = False); 
+				
+		self.axes.contourf(xx,yy,c,cmap = 'viridis'); 
+		
+		col = 'b'; 
+		if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
+			col = 'g'
+		cop = self.axes.scatter(x[0],x[1],color = col,s = 100);  
+		robber = self.axes.scatter(x[2],x[3],color = 'red',s = 100); 
+		self.axes.set_xlabel(xlabel); 
+		self.axes.set_ylabel(ylabel);
+		self.axes.set_title(title);
+		plt.pause(0.5)
+
+
 		return x; 
 
 
@@ -1121,12 +1151,12 @@ if __name__ == "__main__":
 	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True); 
 	signal.signal(signal.SIGINT, a.signal_handler);
 	
-	'''
+	
 	x = [1,1,3,3]; 
 	for i in range(0,10):
 		x = a.getNextPose(x); 
 		print(x); 
-	'''
+	
 
 	if(sol):
 		a.solve(N = iterations,alsave = alsave,verbose = True); 
