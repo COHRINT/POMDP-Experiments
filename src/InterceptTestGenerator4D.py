@@ -723,7 +723,7 @@ class InterceptTestGenerator:
 		dist = math.sqrt(dist); 
 		return dist; 
 
-	def getNextPose(self,x,exclude = []):
+	def getNextPose(self,x,isCop = True,exclude = []):
 		if(self.b == None):
 			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,4,0],[0,0,0,4]],1); 
 		act = self.getQMDPSecondaryAction(self.b,exclude); 
@@ -740,8 +740,6 @@ class InterceptTestGenerator:
 		elif(x[1]-x[3] < 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
 			z = 4;
 
-		self.b = self.beliefUpdate(self.b,act,z); 
-
 		x[0] = min(x[0],5); 
 		x[0] = max(x[0],0); 
 		x[1] = min(x[1],5); 
@@ -751,24 +749,29 @@ class InterceptTestGenerator:
 		x[3] = min(x[3],5); 
 		x[3] = max(x[3],0);
 
+		if(isCop):
+			self.b = self.beliefUpdate(self.b,act,z); 
 
-		xlabel = 'X Position';
-		ylabel = 'Y Position';
-		title = 'Belief Animation';
+			
 
-		[xx,yy,c] = self.b.slice2DFrom4D(vis = False); 
-				
-		self.axes.contourf(xx,yy,c,cmap = 'viridis'); 
-		
-		col = 'b'; 
-		if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
-			col = 'g'
-		cop = self.axes.scatter(x[0],x[1],color = col,s = 100);  
-		robber = self.axes.scatter(x[2],x[3],color = 'red',s = 100); 
-		self.axes.set_xlabel(xlabel); 
-		self.axes.set_ylabel(ylabel);
-		self.axes.set_title(title);
-		plt.pause(0.5)
+
+			xlabel = 'X Position';
+			ylabel = 'Y Position';
+			title = 'Belief Animation';
+
+			[xx,yy,c] = self.b.slice2DFrom4D(vis = False); 
+					
+			self.axes.contourf(xx,yy,c,cmap = 'viridis'); 
+			
+			col = 'b'; 
+			if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
+				col = 'g'
+			cop = self.axes.scatter(x[0],x[1],color = col,s = 100);  
+			robber = self.axes.scatter(x[2],x[3],color = 'red',s = 100); 
+			self.axes.set_xlabel(xlabel); 
+			self.axes.set_ylabel(ylabel);
+			self.axes.set_title(title);
+			plt.pause(0.5)
 
 
 		return x; 
