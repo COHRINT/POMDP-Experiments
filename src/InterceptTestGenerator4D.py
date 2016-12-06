@@ -51,9 +51,9 @@ import matplotlib.image as mgimg
 class InterceptTestGenerator:
 
 	def __init__(self,beliefFile = None,dis = 0.9,gen=False,altObs = True,qGen = True,humObs = True):
-		
-		fig,ax = plt.subplots(); 
-		self.axes = ax; 
+		if(humObs):
+			fig,ax = plt.subplots(); 
+			self.axes = ax; 
 
 		self.humanObs = humObs; 
 
@@ -619,10 +619,14 @@ class InterceptTestGenerator:
 			for i in range(0,len(self.pz)):
 				self.plotAllSlices(self.pz[i],title = 'Condensed Observation'); 
 
-			f = open("../models/obsAltModel4DIntercept.npy","w"); 
-			np.save(f,self.pz);
+			#f = open("../models/obsModel4DIntercept.npy","w"); 
+			#np.save(f,self.pz);
+			file = '../models/obsModel4DIntercept'; 
+			self.pz[0].printGMArrayToFile(self.pz,file); 
 		else:
-			self.pz = np.load("../models/obsAltModel4DIntercept.npy").tolist(); 
+			file = '../models/obsModel4DIntercept'; 
+			tmp = GM(); 
+			self.pz = tmp.readGMArray4D(file); 
 
 	def buildObs(self,gen=True):
 		if(gen):
@@ -1190,8 +1194,8 @@ if __name__ == "__main__":
 	#ususally around 10
 	belMaxMix = 10;
 
-	hObs = True;
-	hardware = True; 
+	hObs = False;
+	hardware = False; 
 
 
 	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True,humObs = hObs); 
