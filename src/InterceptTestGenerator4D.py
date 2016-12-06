@@ -441,7 +441,7 @@ class InterceptTestGenerator:
 			count = 0; 
 
 			#until convergence
-			while(not self.ValueFunc.comp(comparision) and count < 100):
+			while(not self.ValueFunc.comp(comparision) and count < 30):
 				print(count); 
 				comparision = copy.deepcopy(self.ValueFunc); 
 				count += 1;
@@ -467,10 +467,15 @@ class InterceptTestGenerator:
 			#self.ValueFunc.display(); 
 			#self.ValueFunc.plot2D(); 
 			print("MDP Value Iteration Complete");
-			f = open("../policies/MDP4DIntercept.npy","w"); 
-			np.save(f,self.ValueFunc);
+			#f = open("../policies/MDP4DIntercept.npy","w"); 
+			#np.save(f,self.ValueFunc);
+			file = "../policies/MDP4DIntercept"; 
+			self.ValueFunc.printGMArrayToFile([self.ValueFunc],file); 
 		else:
-			self.ValueFunc = np.load("../policies/MDP4DIntercept.npy").tolist(); 
+			#self.ValueFunc = np.load("../policies/MDP4DIntercept.npy").tolist(); 
+			file = "../policies/MDP4DIntercept"; 
+			tmp = GM(); 
+			self.ValueFunc = tmp.readGMArray4D(file)[0]; 
 
 
 
@@ -608,7 +613,7 @@ class InterceptTestGenerator:
 
 			print('Condensing Observation Models'); 
 			for i in range(0,len(self.pz)):
-				self.pz[i] = self.pz[i].kmeansCondensationN(25,lowInit = [-1,-1,-1,-1], highInit = [7,7,7,7]);
+				self.pz[i] = self.pz[i].kmeansCondensationN(50,lowInit = [-1,-1,-1,-1], highInit = [7,7,7,7]);
 
 			print('Plotting Condensed Observation Models'); 
 			for i in range(0,len(self.pz)):
@@ -651,10 +656,15 @@ class InterceptTestGenerator:
 
 			
 
-			f = open("../models/obsModel4DIntercept.npy","w"); 
-			np.save(f,self.pz);
+			#f = open("../models/obsModel4DIntercept.npy","w"); 
+			#np.save(f,self.pz);
+			file = '../models/obsModel4DIntercept'; 
+			self.pz[0].printGMArrayToFile(self.pz,file); 
 		else:
-			self.pz = np.load("../models/obsModel4DIntercept.npy").tolist(); 
+			file = '../models/obsModel4DIntercept'; 
+			tmp = GM(); 
+			self.pz = tmp.readGMArray4D(file); 
+			
 
 
 
@@ -677,16 +687,21 @@ class InterceptTestGenerator:
 			self.plotAllSlices(self.r,title = 'Uncondensed Reward');
 
 			print('Condensing Reward Model'); 
-			self.r.condense(30); 
+			self.r.condense(50); 
 
 			print('Plotting Condensed Reward Model'); 
 			self.plotAllSlices(self.r,title = 'Condensed Reward');
 
 
-			f = open("../models/rewardModel4DIntercept.npy","w"); 
-			np.save(f,self.r);
+			#f = open("../models/rewardModel4DIntercept.npy","w"); 
+			#np.save(f,self.r);
+			file = '../models/rewardModel4DIntercept'; 
+			self.r.printGMArrayToFile([self.r],file);
 		else:
-			self.r = np.load("../models/rewardModel4DIntercept.npy").tolist(); 
+			#self.r = np.load("../models/rewardModel4DIntercept.npy").tolist();
+			file = '../models/rewardModel4DIntercept'; 
+			tmp = GM(); 
+			self.r = tmp.readGMArray4D(file)[0]; 
 
 
 	def beliefUpdate(self,b,a,o,maxMix = 10):
@@ -1175,8 +1190,8 @@ if __name__ == "__main__":
 	#ususally around 10
 	belMaxMix = 10;
 
-	hObs = False;
-	hardware = False; 
+	hObs = True;
+	hardware = True; 
 
 
 	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True,humObs = hObs); 
