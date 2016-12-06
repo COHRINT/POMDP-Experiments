@@ -50,10 +50,12 @@ import matplotlib.image as mgimg
 
 class InterceptTestGenerator:
 
-	def __init__(self,beliefFile = None,dis = 0.9,gen=False,altObs = True,qGen = True):
+	def __init__(self,beliefFile = None,dis = 0.9,gen=False,altObs = True,qGen = True,humObs = True):
 		
 		fig,ax = plt.subplots(); 
 		self.axes = ax; 
+
+		self.humanObs = humObs; 
 
 		#Initialize exit flag
 		self.exitFlag = False; 
@@ -726,35 +728,8 @@ class InterceptTestGenerator:
 	def getNextPose(self,x,isCop = True,exclude = []):
 		if(self.b == None):
 			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,4,0],[0,0,0,4]],1); 
-		act = self.getQMDPSecondaryAction(self.b,exclude); 
-		x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
-				
-		if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
-			z = 0; 
-		elif(x[0]-x[2] > 0 and abs(x[0]-x[2]) > abs(x[1]-x[3])):
-			z = 1; 
-		elif(x[0]-x[2] < 0 and abs(x[0]-x[2]) > abs(x[1]-x[3])):
-			z = 2;
-		elif(x[1]-x[3] > 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
-			z = 3; 
-		elif(x[1]-x[3] < 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
-			z = 4;
-
-		x[0] = min(x[0],5); 
-		x[0] = max(x[0],0); 
-		x[1] = min(x[1],5); 
-		x[1] = max(x[1],0);
-		x[2] = min(x[2],5); 
-		x[2] = max(x[2],0); 
-		x[3] = min(x[3],5); 
-		x[3] = max(x[3],0);
-
+		
 		if(isCop):
-			self.b = self.beliefUpdate(self.b,act,z); 
-
-			
-
-
 			xlabel = 'X Position';
 			ylabel = 'Y Position';
 			title = 'Belief Animation';
@@ -772,6 +747,58 @@ class InterceptTestGenerator:
 			self.axes.set_ylabel(ylabel);
 			self.axes.set_title(title);
 			plt.pause(0.5)
+
+
+		act = self.getQMDPSecondaryAction(self.b,exclude); 
+		x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
+			
+		z = -1; 
+
+		if(self.humanObs):
+			while(z not in [4,6,2,8,5,99]):
+				try:
+					z = int(raw_input('Observation?'));
+					if(z == 99):
+						break; 
+				except:
+					if(z not in [4,6,2,8,5,99]):
+						print("Please enter a valid observation...");
+			if(z == 4):
+				z = 1;
+			elif(z == 6):
+				z = 2; 
+			elif(z == 2):
+				z = 3; 
+			elif(z == 8):
+				z = 4; 
+			elif(z ==5):
+				z = 0; 
+			if(z == 99):
+				z = -1; 
+		else:
+
+			if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
+				z = 0; 
+			elif(x[0]-x[2] > 0 and abs(x[0]-x[2]) > abs(x[1]-x[3])):
+				z = 1; 
+			elif(x[0]-x[2] < 0 and abs(x[0]-x[2]) > abs(x[1]-x[3])):
+				z = 2;
+			elif(x[1]-x[3] > 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
+				z = 3; 
+			elif(x[1]-x[3] < 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
+				z = 4;
+
+		x[0] = min(x[0],5); 
+		x[0] = max(x[0],0); 
+		x[1] = min(x[1],5); 
+		x[1] = max(x[1],0);
+		x[2] = min(x[2],5); 
+		x[2] = max(x[2],0); 
+		x[3] = min(x[3],5); 
+		x[3] = max(x[3],0);
+
+		if(isCop):
+			self.b = self.beliefUpdate(self.b,act,z);
 
 
 		return x; 
@@ -1148,17 +1175,20 @@ if __name__ == "__main__":
 	#ususally around 10
 	belMaxMix = 10;
 
+	hObs = False;
+	hardware = False; 
 
 
-
-	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True); 
+	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True,humObs = hObs); 
 	signal.signal(signal.SIGINT, a.signal_handler);
 	
 	
-	x = [1,1,3,3]; 
-	for i in range(0,10):
-		x = a.getNextPose(x); 
-		print(x); 
+	if(hardware):
+		x = [1,1,4,3]; 
+		for i in range(0,10):
+			x = a.getNextPose(x,True); 
+			
+	
 	
 
 	if(sol):
