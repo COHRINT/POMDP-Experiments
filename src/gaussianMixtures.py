@@ -45,7 +45,7 @@ class GM:
 			for i in range(0,len(w)):
 				self.Gs += [Gaussian(u[i],s[i],w[i])];
 		self.size = len(self.Gs);  
-		self.action = None; 
+		self.action = -1; 
 
 
 	def getMeans(self):
@@ -380,6 +380,13 @@ class GM:
 		slices = slices.replace('[',''); 
 		return slices;
 
+	def printGMArrayToFile(self,GMArr,fileName):
+		f = open(fileName,"w"); 
+	
+		for i in range(0,len(GMArr)):
+			GMArr[i].printToFile(f); 
+		f.close();
+
 	def printToFile(self,file):
 		#first line is N, number of gaussians
 		#next N lines are, mean, variance, weight
@@ -389,6 +396,37 @@ class GM:
 			var = self.printClean(g.var); 
 			w = self.printClean(g.weight); 
 			file.write(m + " " + var + " " + w + "\n"); 
+
+	def readGMArray4D(self,fileName):
+		file = open(fileName,"r"); 
+		lines = np.fromfile(fileName,sep = " "); 
+		
+		ans = []
+
+		count = 0; 
+		countL = len(lines); 
+		while(count < countL):
+			tmp = lines[count:]; 
+			
+			num = int(tmp[0]); 
+			act = int(tmp[1]); 
+			count = count + 2; 
+			cur = GM(); 
+			cur.action = act; 
+			 
+
+			for i in range(0,num):
+				tmp = lines[count:]
+				
+				count = count + 21;
+
+				mean = [int(tmp[0]),int(tmp[1]),int(tmp[2]),int(tmp[3])]; 
+				var = [[int(tmp[4]),int(tmp[5]),int(tmp[6]),int(tmp[7])],[int(tmp[8]),int(tmp[9]),int(tmp[10]),int(tmp[11])],[int(tmp[12]),int(tmp[13]),int(tmp[14]),int(tmp[15])],[int(tmp[16]),int(tmp[17]),int(tmp[18]),int(tmp[19])]]; 
+				weight = int(tmp[20]); 
+				cur.addG(Gaussian(mean,var,weight)); 
+			ans += [cur]; 
+
+		return ans; 
 
 
 
@@ -740,7 +778,7 @@ if __name__ == "__main__":
 
 	
 	
-
+	'''
 	#build a softmax model
 	weight = [0,4,8]; 
 	bias = [-5,5,0];
@@ -778,9 +816,21 @@ if __name__ == "__main__":
 	plt.title("Fusion of prior with: " + modelLabels[model]); 
 	plt.legend(labels); 
 	plt.show(); 
+	'''
 
-	
+	prior = GM([0,-2,1,2],[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],1); 
+	prior.addG(Gaussian([0,-2,1,2],[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],1))
 
+	pri = GM([0,-2,1,2],[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],1); 
+	pri.addG(Gaussian([0,-2,1,2],[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],1))
+
+
+
+	file = '../models/loadTest.txt'; 
+	prior.printGMArrayToFile([prior],file); 
+
+	post = prior.readGMArray4D(file); 
+	print(post); 
 
 
 
