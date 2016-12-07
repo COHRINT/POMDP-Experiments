@@ -417,12 +417,13 @@ class GM:
 
 			for i in range(0,num):
 				tmp = lines[count:]
-				
+				 
 				count = count + 21;
 
-				mean = [int(tmp[0]),int(tmp[1]),int(tmp[2]),int(tmp[3])]; 
-				var = [[int(tmp[4]),int(tmp[5]),int(tmp[6]),int(tmp[7])],[int(tmp[8]),int(tmp[9]),int(tmp[10]),int(tmp[11])],[int(tmp[12]),int(tmp[13]),int(tmp[14]),int(tmp[15])],[int(tmp[16]),int(tmp[17]),int(tmp[18]),int(tmp[19])]]; 
-				weight = int(tmp[20]); 
+				mean = [float(tmp[0]),float(tmp[1]),float(tmp[2]),float(tmp[3])]; 
+				var = [[float(tmp[4]),float(tmp[5]),float(tmp[6]),float(tmp[7])],[float(tmp[8]),float(tmp[9]),float(tmp[10]),float(tmp[11])],[float(tmp[12]),float(tmp[13]),float(tmp[14]),float(tmp[15])],[float(tmp[16]),float(tmp[17]),float(tmp[18]),float(tmp[19])]]; 
+				
+				weight = float(tmp[20]); 
 				cur.addG(Gaussian(mean,var,weight)); 
 			ans += [cur]; 
 
@@ -827,10 +828,10 @@ if __name__ == "__main__":
 
 
 	file = '../models/loadTest.txt'; 
-	prior.printGMArrayToFile([prior],file); 
-
-	post = prior.readGMArray4D(file); 
-	print(post); 
+	prior.printGMArrayToFile([prior,pri],file); 
+	tmp = GM(); 
+	post = tmp.readGMArray4D(file); 
+	post[0].display(); 
 
 
 
