@@ -758,6 +758,7 @@ class InterceptTestGenerator:
 			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],1); 
 			plotFlag = False; 
 		
+		prevX = copy.deepcopy(x); 
 		if(isCop):
 			z=-1;
 			obsName = 'None';
@@ -790,6 +791,7 @@ class InterceptTestGenerator:
 					obsName = 'Near';  
 				if(z == 99):
 					z = -1; 
+					self.exitFlag = True;  
 
 			
 				self.b = self.beliefUpdate(self.b,act,z);
@@ -806,12 +808,12 @@ class InterceptTestGenerator:
 			col = 'r'; 
 			if(z == 0):
 				col = 'g'
-			cop = self.axes.scatter(x[0],x[1],color = col,s = 100);  
-			robber = self.axes.scatter(x[2],x[3],color = 'b',s = 100); 
+			#cop = self.axes.scatter(x[0],x[1],color = col,s = 100);  
+			#robber = self.axes.scatter(x[2],x[3],color = 'b',s = 100); 
 			self.axes.set_xlabel(xlabel); 
 			self.axes.set_ylabel(ylabel);
 			self.axes.set_title(title);
-			plt.pause(0.5);
+			
 
 
 		act = self.getQMDPSecondaryAction(self.b,exclude); 
@@ -830,40 +832,19 @@ class InterceptTestGenerator:
 		x[3] = min(x[3],5); 
 		x[3] = max(x[3],0);
 
-		
+
+		if(isCop):
+			col = 'r'; 
+			if(z == 0):
+				col = 'g'
+			cop = self.axes.scatter(prevX[0],prevX[1],color = col,s = 100);  
+			robber = self.axes.scatter(prevX[2],prevX[3],color = 'b',s = 100); 
+
+			self.axes.arrow(prevX[0],prevX[1],x[0]-prevX[0],x[1]-prevX[1],head_width = 0.05,head_length=0.15, fc=col,ec=col); 
+			self.axes.arrow(prevX[2],prevX[3],x[2]-prevX[2],x[3]-prevX[3],head_width = 0.05,head_length=0.25, fc='b',ec='b'); 
+			plt.pause(0.5);
 
 		return x; 
-
-	def getHumanObservation(self):
-		if(self.b == None):
-			self.b = GM([1,1,2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],1); 
-		
-		act = self.getQMDPSecondaryAction(self.b); 
-		z=-1;
-		while(z not in [4,6,2,8,5,99]):
-				try:
-					z = int(raw_input('Observation?'));
-					if(z == 99):
-						break; 
-				except:
-					if(z not in [4,6,2,8,5,99]):
-						print("Please enter a valid observation...");
-		if(z == 4):
-			z = 1;
-		elif(z == 6):
-			z = 2; 
-		elif(z == 2):
-			z = 3; 
-		elif(z == 8):
-			z = 4; 
-		elif(z ==5):
-			z = 0; 
-		if(z == 99):
-			z = -1; 
-
-		
-		self.b = self.beliefUpdate(self.b,act,z);
-
 
 
 
@@ -998,6 +979,7 @@ class InterceptTestGenerator:
 					elif(act ==5):
 						act = 4; 
 					if(act == 99):
+						self.exitFlag == True; 
 						break; 
 
 					 
@@ -1251,7 +1233,8 @@ if __name__ == "__main__":
 		for i in range(0,20):
 			#a.getHumanObservation();  
 			x = a.getNextPose(x,True);
-			
+			if(a.exitFlag):
+				break; 
 			#print(x); 
 			
 	
