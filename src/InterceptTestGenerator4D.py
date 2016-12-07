@@ -518,7 +518,7 @@ class InterceptTestGenerator:
 		act = np.argmax([self.continuousDot(self.Q[j],b) for j in range(0,len(self.Q))]);
 		return act; 
 
-	def getQMDPSecondaryAction(self,b,exclude):
+	def getQMDPSecondaryAction(self,b,exclude=[]):
 		sG = [];
 		for a in range(0,len(self.delA)):
 			if(a not in exclude):
@@ -579,7 +579,7 @@ class InterceptTestGenerator:
 	#movement variance is 0.25 for the robber, stationary is 0.0001
 	def buildTransition(self):
 		self.delAVar = [[0.0001,0,0,0],[0,0.0001,0,0],[0,0,0.15,0],[0,0,0,0.15]]; 
-		self.delA = [[-0.5,0,0,0],[0.5,0,0,0],[0,-0.5,0,0],[0,0.5,0,0],[0,0,0,0]]; 
+		self.delA = [[-1,0,0,0],[1,0,0,0],[0,-1,0,0],[0,1,0,0],[0,0,0,0]]; 
 
 	def buildAltObs(self,gen=True):
 		#A front back left right center model
@@ -721,7 +721,6 @@ class InterceptTestGenerator:
 		btmp = GM(); 
 
 		for i in self.pz[o].Gs:
-			print(i.var); 
 			for j in b.Gs:
 				
 				tmp = mvn.pdf(np.add(np.matrix(j.mean),np.matrix(self.delA[a])).tolist(),i.mean,self.covAdd(self.covAdd(i.var,j.var),self.delAVar))  
@@ -754,67 +753,73 @@ class InterceptTestGenerator:
 		return dist; 
 
 	def getNextPose(self,x,isCop = True,exclude = []):
+		plotFlag = True; 
 		if(self.b == None):
-			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,4,0],[0,0,0,4]],1); 
+			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],1); 
+			plotFlag = False; 
 		
 		if(isCop):
+			z=-1;
+			obsName = 'None';
+			if(plotFlag):
+				
+				act = self.getQMDPSecondaryAction(self.b); 
+				z=-1;
+				while(z not in [4,6,2,8,5,99]):
+					try:
+						z = int(raw_input('Observation?'));
+						if(z == 99):
+							break; 
+					except:
+						if(z not in [4,6,2,8,5,99]):
+							print("Please enter a valid observation...");
+				if(z == 4):
+					z = 1;
+					obsName = 'Left';
+				elif(z == 6):
+					z = 2; 
+					obsName = 'Right';
+				elif(z == 2):
+					z = 3; 
+					obsName = 'Down';
+				elif(z == 8):
+					z = 4; 
+					obsName = 'Up';
+				elif(z ==5):
+					z = 0;
+					obsName = 'Near';  
+				if(z == 99):
+					z = -1; 
+
+			
+				self.b = self.beliefUpdate(self.b,act,z);
+
+			self.axes.cla(); 
 			xlabel = 'X Position';
 			ylabel = 'Y Position';
-			title = 'Belief Animation';
+			title = 'Most Recent Observation: ' + obsName;
 
 			[xx,yy,c] = self.b.slice2DFrom4D(vis = False); 
 					
 			self.axes.contourf(xx,yy,c,cmap = 'viridis'); 
 			
-			col = 'b'; 
-			if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
+			col = 'r'; 
+			if(z == 0):
 				col = 'g'
 			cop = self.axes.scatter(x[0],x[1],color = col,s = 100);  
-			robber = self.axes.scatter(x[2],x[3],color = 'red',s = 100); 
+			robber = self.axes.scatter(x[2],x[3],color = 'b',s = 100); 
 			self.axes.set_xlabel(xlabel); 
 			self.axes.set_ylabel(ylabel);
 			self.axes.set_title(title);
-			plt.pause(0.5)
+			plt.pause(0.5);
 
 
 		act = self.getQMDPSecondaryAction(self.b,exclude); 
-		x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
-			
-		z = -1; 
-
-		if(self.humanObs):
-			while(z not in [4,6,2,8,5,99]):
-				try:
-					z = int(raw_input('Observation?'));
-					if(z == 99):
-						break; 
-				except:
-					if(z not in [4,6,2,8,5,99]):
-						print("Please enter a valid observation...");
-			if(z == 4):
-				z = 1;
-			elif(z == 6):
-				z = 2; 
-			elif(z == 2):
-				z = 3; 
-			elif(z == 8):
-				z = 4; 
-			elif(z ==5):
-				z = 0; 
-			if(z == 99):
-				z = -1; 
-		else:
-
-			if(self.distance(x[0],x[1],x[2],x[3]) <= 1):
-				z = 0; 
-			elif(x[0]-x[2] > 0 and abs(x[0]-x[2]) > abs(x[1]-x[3])):
-				z = 1; 
-			elif(x[0]-x[2] < 0 and abs(x[0]-x[2]) > abs(x[1]-x[3])):
-				z = 2;
-			elif(x[1]-x[3] > 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
-				z = 3; 
-			elif(x[1]-x[3] < 0 and abs(x[1]-x[3]) > abs(x[0]-x[2])):
-				z = 4;
+		#x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
+		x[0] = x[0] + self.delA[act][0]; 
+		x[1] = x[1] + self.delA[act][1]; 
+		x[2] = x[2] + self.delA[act][2] + (random.random() - 0.5);
+		x[3] = x[3] + self.delA[act][3] + (random.random() - 0.5);
 
 		x[0] = min(x[0],5); 
 		x[0] = max(x[0],0); 
@@ -825,11 +830,41 @@ class InterceptTestGenerator:
 		x[3] = min(x[3],5); 
 		x[3] = max(x[3],0);
 
-		if(isCop):
-			self.b = self.beliefUpdate(self.b,act,z);
-
+		
 
 		return x; 
+
+	def getHumanObservation(self):
+		if(self.b == None):
+			self.b = GM([1,1,2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],1); 
+		
+		act = self.getQMDPSecondaryAction(self.b); 
+		z=-1;
+		while(z not in [4,6,2,8,5,99]):
+				try:
+					z = int(raw_input('Observation?'));
+					if(z == 99):
+						break; 
+				except:
+					if(z not in [4,6,2,8,5,99]):
+						print("Please enter a valid observation...");
+		if(z == 4):
+			z = 1;
+		elif(z == 6):
+			z = 2; 
+		elif(z == 2):
+			z = 3; 
+		elif(z == 8):
+			z = 4; 
+		elif(z ==5):
+			z = 0; 
+		if(z == 99):
+			z = -1; 
+
+		
+		self.b = self.beliefUpdate(self.b,act,z);
+
+
 
 
 
@@ -1213,8 +1248,11 @@ if __name__ == "__main__":
 	
 	if(hardware):
 		x = [1,1,4,3]; 
-		for i in range(0,10):
-			x = a.getNextPose(x,True); 
+		for i in range(0,20):
+			#a.getHumanObservation();  
+			x = a.getNextPose(x,True);
+			
+			#print(x); 
 			
 	
 	
