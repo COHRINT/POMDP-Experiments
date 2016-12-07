@@ -68,6 +68,7 @@ class InterceptTestGenerator:
 		else:
 			self.buildObs(gen=gen); 
 		
+
 		if(gen == True):
 			print("Building Reward Model"); 
 		self.buildReward(gen = gen); 
@@ -619,14 +620,17 @@ class InterceptTestGenerator:
 			for i in range(0,len(self.pz)):
 				self.plotAllSlices(self.pz[i],title = 'Condensed Observation'); 
 
+
+
 			#f = open("../models/obsModel4DIntercept.npy","w"); 
 			#np.save(f,self.pz);
-			file = '../models/obsModel4DIntercept'; 
+			file = '../models/obsAltModel4DIntercept'; 
 			self.pz[0].printGMArrayToFile(self.pz,file); 
 		else:
 			file = '../models/obsModel4DIntercept'; 
 			tmp = GM(); 
 			self.pz = tmp.readGMArray4D(file); 
+			
 
 	def buildObs(self,gen=True):
 		if(gen):
@@ -642,7 +646,10 @@ class InterceptTestGenerator:
 						for l in range(-2,8):
 							if(abs(i-k) >=2 or abs(j-l) >= 2):
 								self.pz[1].addG(Gaussian([i,j,k,l],var,1)); 
-						
+								
+
+
+
 			print('Plotting Observation Models'); 
 			self.plotAllSlices(self.pz[0],title = 'Uncondensed Detection'); 
 			self.plotAllSlices(self.pz[1],title = 'Uncondensed Non-Detect'); 
@@ -668,6 +675,7 @@ class InterceptTestGenerator:
 			file = '../models/obsModel4DIntercept'; 
 			tmp = GM(); 
 			self.pz = tmp.readGMArray4D(file); 
+
 			
 
 
@@ -713,6 +721,7 @@ class InterceptTestGenerator:
 		btmp = GM(); 
 
 		for i in self.pz[o].Gs:
+			print(i.var); 
 			for j in b.Gs:
 				
 				tmp = mvn.pdf(np.add(np.matrix(j.mean),np.matrix(self.delA[a])).tolist(),i.mean,self.covAdd(self.covAdd(i.var,j.var),self.delAVar))  
@@ -1194,8 +1203,8 @@ if __name__ == "__main__":
 	#ususally around 10
 	belMaxMix = 10;
 
-	hObs = False;
-	hardware = False; 
+	hObs = True;
+	hardware = True; 
 
 
 	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True,humObs = hObs); 
