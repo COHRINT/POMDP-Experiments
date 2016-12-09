@@ -803,7 +803,7 @@ def TestCondense2D():
 
 if __name__ == "__main__":
 
-	#TestGMProduct(); 
+	TestGMProduct(); 
 	#TestTextFilePrinting();
 	#TestCondense(); 
 	#TestCondense2D(); 
