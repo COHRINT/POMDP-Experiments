@@ -9,6 +9,10 @@ Classes: GM,Gaussian
 Allows for the creation, use, and compression of mixtures
 of multivariate normals, or Gaussian Mixture Models (GMM).
 
+Version History:
+1.0.1: Initial release fit to be seen in public
+1.0.2: Fixed the GMProduct function to work in multivariate
+cases. Added test cases for 2D and 4D GMProduct
 
 
 ***********************************************************
@@ -19,7 +23,7 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
@@ -346,6 +350,7 @@ class GM:
 
 		if(lowInit == None):
 			lowInit = [0]*len(self.Gs[0].mean);
+
 		if(highInit == None):
 			highInit = [5]*len(self.Gs[0].mean)
 
@@ -481,19 +486,20 @@ class GM:
 		'''
 		result = GM(); 
 		for g1 in self.Gs:
-			u1 = np.matrix(g1.mean); 
+			u1 = copy.deepcopy(np.matrix(g1.mean)); 
 			var1 = np.matrix(g1.var); 
 			w1 = g1.weight; 
 			for g2 in b.Gs:
-				u2 = np.matrix(g2.mean); 
+				u2 = copy.deepcopy(np.matrix(g2.mean)); 
 				var2 = np.matrix(g2.var); 
 				w2 = g2.weight; 
 
-				weight = w1*w2*mvn.pdf(u1,u2,var1+var2); 
+				weight = w1*w2*mvn.pdf(u1.tolist()[0],u2.tolist()[0],var1+var2); 
 				var = (var1.I + var2.I).I; 
-				mean = var*(var1.I*u1 + var2.I*u2); 
-				mean = mean.tolist(); 
+				mean = var*(var1.I*np.transpose(u1) + var2.I*np.transpose(u2)); 
+				mean = np.transpose(mean).tolist()[0]; 
 				var = var.tolist();
+
 				result.addNewG(mean,var,weight); 
 
 		if(cond != -1):
@@ -736,6 +742,64 @@ def TestGMProduct():
 	plt.legend(['First Mixture','Second Mixture','Product']); 
 	plt.show(); 
 
+def Test2DGMProduct():
+	g1 = GM([2,1],[[1,0],[0,2]],1); 
+	g2 = GM([1,5],[[4,0],[0,1]],1); 
+
+	mix = g2.GMProduct(g1,cond=-1); 
+
+
+	[x1,y1,c1] = g1.plot2D(vis = False); 
+	[x2,y2,c2] = g2.plot2D(vis = False); 
+	[x3,y3,c3] = mix.plot2D(vis = False); 
+
+	fig,axarr = plt.subplots(3,sharex = True); 
+	axarr[0].contourf(x1,y1,c1,cmap = 'viridis'); 
+	axarr[0].set_title('First Mixture');  
+	axarr[1].contourf(x2,y2,c2,cmap = 'viridis'); 
+	axarr[0].set_title('Second Mixture'); 
+	axarr[2].contourf(x3,y3,c3,cmap = 'viridis'); 
+	axarr[0].set_title('Product Mixture'); 
+	plt.suptitle('Testing the product of 2D Gaussians'); 
+	plt.show();
+	
+
+def Test4DGMProduct():
+	#Courtesy of Mike Ouimet
+	m1 = [[0, 0, 0, 0], [1,1,1,1]]  #means
+	s1 = [np.eye(4), 2*np.eye(4)]  #variances
+
+	m2 = [[0, 1, -1, 0], [1,0,-1,1]]
+	s2 = [4*np.eye(4), 1*np.eye(4)]
+
+	g1 = GM(u=m1, s=s1, w=[1,1])
+	g2 = GM(u=m2, s=s2, w=[1,1])
+
+	mix = g2.GMProduct(g1,cond = -1)
+
+	print("The resulting mixture:"); 
+	mix.display(); 
+
+	fig,ax = plt.subplots(2,2); 
+	[x1,y1,c1] = mix.slice2DFrom4D(vis=False,dims=[0,2]); 
+	ax[0,0].contourf(x1,y1,c1,cmap = 'viridis'); 
+	ax[0,0].set_title('X1 by X3'); 
+
+	[x2,y2,c2] = mix.slice2DFrom4D(vis=False,dims=[0,3]); 
+	ax[0,1].contourf(x2,y2,c2,cmap = 'viridis'); 
+	ax[0,1].set_title('X1 by X4');
+
+	[x3,y3,c3] = mix.slice2DFrom4D(vis=False,dims=[1,2]); 
+	ax[1,0].contourf(x3,y3,c3,cmap = 'viridis'); 
+	ax[1,0].set_title('X2 by X3'); 
+
+	[x4,y4,c4] = mix.slice2DFrom4D(vis=False,dims=[1,3]); 
+	ax[1,1].contourf(x4,y4,c4,cmap = 'viridis'); 
+	ax[1,1].set_title('X2 by X4'); 
+
+	fig.suptitle("Slices along Various Axis in 2D from 4D"); 
+	plt.show();
+
 
 def TestTextFilePrinting():
 	prior = GM([0,-2,1,2],[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],1); 
@@ -801,12 +865,31 @@ def TestCondense2D():
 	plt.show(); 
 
 
+def TestComparison():
+	test1 = GM(); 
+	test1.addG(Gaussian([0,1],[[1,0],[0,1]],1)); 
+	test1.addG(Gaussian([1,2],[[1,0],[0,1]],1)); 
+
+	test2 = GM(); 
+	test2.addG(Gaussian([0,1],[[1,0],[0,1]],1)); 
+	test2.addG(Gaussian([1,2],[[1,0],[0,1]],1)); 
+
+	test3 = GM(); 
+	test3.addG(Gaussian([0,5],[[1,0],[0,1]],1)); 
+	test3.addG(Gaussian([1,2],[[1,0],[0,1]],1)); 
+
+	print('Test1 and Test2: ' + str(test1.comp(test2))); 
+	print('Test1 and Test3: ' + str(test1.comp(test3))); 
+
 if __name__ == "__main__":
 
-	TestGMProduct(); 
+	#TestGMProduct();
+	Test2DGMProduct();
+	#Test4DGMProduct();   
 	#TestTextFilePrinting();
 	#TestCondense(); 
 	#TestCondense2D(); 
+	#TestComparison(); 
 
 
 
