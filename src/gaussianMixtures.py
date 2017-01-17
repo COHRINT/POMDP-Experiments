@@ -19,7 +19,7 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
@@ -290,31 +290,24 @@ class GM:
 			print("Action"); 
 			print(self.action); 
 
-	def comp(self,b):
+	def fullComp(self,b):
 		'''
 		Compares two GMMs. If they are identical, return true,
 		else return false. 
-		WARNING: May not work for more than 1 dimension in the general case. 
+		Works for the general case
 		'''
-
 		if(self.size != b.size):
 			return False; 
 
-		for g in range(0,self.size):
-			if(self.Gs[g].mean != b.Gs[g].mean):
+		for i in range(0,self.size):
+			if(not np.array_equal(self.Gs[i].mean,b.Gs[i].mean)):
 				return False; 
-			if(self.Gs[g].weight != b.Gs[g].weight):
+			if(not np.array_equal(self.Gs[i].var,b.Gs[i].var)):
 				return False; 
-
-			if(isinstance(self.Gs[g].var,(int,float))):
-				if(self.Gs[g].var != b.Gs[g].var):
-					return False; 
-			else:
-				for i in self.Gs[g].var:
-					if(i not in b.Gs[g].var):
-						return False; 
-
+			if(self.Gs[i].weight != b.Gs[i].weight):
+				return False; 
 		return True; 
+
 
 	def pointEval(self,x):
 		'''
@@ -392,6 +385,10 @@ class GM:
 
 		if(highInit == None):
 			highInit = [5]*len(self.Gs[0].mean)
+
+
+
+
 
 
 		#Initialize the means. Spread randomly through the bounded space
@@ -585,6 +582,8 @@ class GM:
 
 		
 
+
+
 		#Check if any mixands are small enough to not matter
 		#specifically if they're weighted really really low
 		dels = []; 
@@ -596,6 +595,9 @@ class GM:
 			if(rem in self.Gs):
 				self.Gs.remove(rem);
 				self.size = self.size-1; 
+
+
+		#Check if any mixands are identical
 
 
 		#Check if merging is useful
@@ -767,7 +769,7 @@ class GM:
 
 
 
-	    return w_ij, mu_ij, P_ij
+	    return w_ij, mu_ij, abs(P_ij)
 
 	def subMu(self,a,b):
 
@@ -780,7 +782,6 @@ class GM:
 			for i in range(0,len(a)):
 				c[i] = a[i]-b[i]; 
 			return c; 
-
 
 	
 
@@ -942,8 +943,8 @@ def TestComparison():
 	test3.addG(Gaussian([0,5],[[1,0],[0,1]],1)); 
 	test3.addG(Gaussian([1,2],[[1,0],[0,1]],1)); 
 
-	print('Test1 and Test2: ' + str(test1.comp(test2))); 
-	print('Test1 and Test3: ' + str(test1.comp(test3))); 
+	print('Test1 and Test2: ' + str(test1.fullComp(test2))); 
+	print('Test1 and Test3: ' + str(test1.fullComp(test3))); 
 
 
 if __name__ == "__main__":
@@ -952,9 +953,9 @@ if __name__ == "__main__":
 	#Test2DGMProduct();
 	#Test4DGMProduct();   
 	#TestTextFilePrinting();
-	TestCondense(); 
+	#TestCondense(); 
 	#TestCondense2D(); 
-	#TestComparison(); 
+	TestComparison(); 
 
 
 	
