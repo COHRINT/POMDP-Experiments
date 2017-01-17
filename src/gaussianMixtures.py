@@ -9,10 +9,6 @@ Classes: GM,Gaussian
 Allows for the creation, use, and compression of mixtures
 of multivariate normals, or Gaussian Mixture Models (GMM).
 
-Version History:
-1.0.1: Initial release fit to be seen in public
-1.0.2: Fixed the GMProduct function to work in multivariate
-cases. Added test cases for 2D and 4D GMProduct
 
 
 ***********************************************************
@@ -23,7 +19,7 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
@@ -67,6 +63,8 @@ class Gaussian:
 		print("Weight"); 
 		print(self.weight); 
 
+
+
 class GM:
 	def __init__(self,u=None,s=None,w=None):
 		'''
@@ -87,6 +85,13 @@ class GM:
 		self.size = len(self.Gs);  
 		self.action = -1; 
 
+
+	#Index Overrides
+	def __getitem__(self,key):
+		return self.Gs[key];
+
+	def __setitem__(self,key,value):
+		self.Gs[key] = value; 
 
 	def getMeans(self):
 		'''
@@ -123,13 +128,13 @@ class GM:
 	def clean(self):
 
 		for g in self.Gs:
-			if(not isinstance(g.mean,list) and not isinstance(g.mean,int) and not isinstance(g.var,float)):
+			if(not isinstance(g.mean,list) and not isinstance(g.mean,int) and not isinstance(g.mean,float)):
 				g.mean = g.mean.tolist(); 
 
 			if(not isinstance(g.var,list) and not isinstance(g.var,int) and not isinstance(g.var,float)):
 				g.var = g.var.tolist(); 
 
-			if(not isinstance(g.mean,int) and not isinstance(g.var,float)):
+			if(not isinstance(g.mean,int) and not isinstance(g.mean,float)):
 				while(len(g.mean) != len(g.var)):
 					g.mean = g.mean[0]; 
 
@@ -181,7 +186,7 @@ class GM:
 			plt.plot(a,b);   
 			plt.show(); 
 		else:
-			return b; 
+			return [a,b]; 
 
 	def plot2D(self,low = [0,0], high = [5,5],vis = True,res = 100,xlabel = 'Cop Belief',ylabel = 'Robber Belief',title = 'Belief'):
 		
@@ -198,7 +203,7 @@ class GM:
 
 		pos = np.dstack((x, y)) 
 		
-		self.clean(); 
+		#self.clean(); 
 
 		for g in self.Gs:
 			
@@ -331,15 +336,46 @@ class GM:
 		dist = math.sqrt(dist); 
 		return dist; 
 	
+	def ISD(self,g2):
+		#Integrated Squared Difference
+		#From "Cost-Function-Based Gaussian Mixture Reduction for Target Tracking"
+		#by Jason Williams, Peter Maybeck
+
+		#Note: Can be expensive f
+
+		#Js = Jhh - 2Jhr + Jrr
+		#Jhh = self-likeness for g1
+		#Jhr = cross-likeness 
+		#Jrr = self-likeness for g2
+
+		Jhh = 0; 
+		for g in self.Gs:
+			for h in self.Gs:
+				Jhh += g.weight*h.weight*mvn.pdf(g.mean,h.mean,np.matrix(g.var) + np.matrix(h.var)); 
+
+		Jrr = 0; 
+		for g in g2.Gs:
+			for h in g2.Gs:
+				Jrr += g.weight*h.weight*mvn.pdf(g.mean,h.mean,np.matrix(g.var) + np.matrix(h.var)); 
+
+		Jhr = 0; 
+		for g in self.Gs:
+			for h in g2.Gs:
+				Jhr += g.weight*h.weight*mvn.pdf(g.mean,h.mean,np.matrix(g.var) + np.matrix(h.var)); 
+
+		Js = Jhh-2*Jhr+Jrr; 
+		return Js; 
+
+
 	#General N-dimensional
-	def kmeansCondensationN(self,k=10,lowInit=None,highInit = None):
+	def kmeansCondensationN(self,k=10,lowInit=None,highInit = None,maxIter = 100):
 		
 		'''
-		Condenses mixands by first clustering them into k groups, based
-		on a single iteration of k-means. Then each group is condensed to a single
+		Condenses mixands by first clustering them into k groups, using
+		k-means. Then each group is condensed to a single
 		Gaussian using Runnalls Method. Each Gaussian is then added to a new GMM. 
-
-		Only pursues a single clustering step in k-means, does not attempt to converge.
+		
+		Has a tendency to overcondense
 
 		Inputs:
 		k: number of mixands in the returned GMM
@@ -348,11 +384,15 @@ class GM:
 
 		'''
 
+		if(self.size <= k):
+			return self; 
+
 		if(lowInit == None):
 			lowInit = [0]*len(self.Gs[0].mean);
 
 		if(highInit == None):
 			highInit = [5]*len(self.Gs[0].mean)
+
 
 		#Initialize the means. Spread randomly through the bounded space
 		means = [0]*k; 
@@ -365,14 +405,33 @@ class GM:
 				tmp.append(random()*(highInit-lowInit) + lowInit); 
 			means[i] = tmp; 
 
+		converge = False; 
+		count = 0; 
+		newMeans = [0]*k; 
 
-		clusters = [GM() for i in range(0,k)]; 
-		for g in self.Gs:
-			#put the gaussian in the cluster which minimizes the distance between the distribution mean and the cluster mean
-			if(isinstance(g.mean,list)):
-				clusters[np.argmin([self.distance(g.mean,means[j]) for j in range(0,k)])].addG(g); 
-			else:
-				clusters[np.argmin([self.distance([g.mean],means[j]) for j in range(0,k)])].addG(g); 
+		while(converge == False and count < maxIter):
+
+			clusters = [GM() for i in range(0,k)]; 
+			for g in self.Gs:
+				#put the gaussian in the cluster which minimizes the distance between the distribution mean and the cluster mean
+				if(isinstance(g.mean,list)):
+					clusters[np.argmin([self.distance(g.mean,means[j]) for j in range(0,k)])].addG(g); 
+				else:
+					clusters[np.argmin([self.distance([g.mean],means[j]) for j in range(0,k)])].addG(g); 
+
+
+			#find the mean of each cluster
+			newMeans = [0]*k; 
+			for i in range(0,k):
+				if(isinstance(self.Gs[0].mean,list)):
+					newMeans[i] = np.array([0]*len(self.Gs[0].mean));
+				for g in clusters[i].Gs:
+					newMeans[i] = np.add(newMeans[i],np.divide(g.mean,clusters[i].size)); 
+
+
+			if(np.array_equal(means,newMeans)):
+				converge = True; 
+			count = count+1; 
 
 		#condense each cluster
 		for c in clusters:
@@ -516,6 +575,9 @@ class GM:
 		Adapted from Nick Sweets gaussian_mixture.py
 		https://github.com/COHRINT/cops_and_robots/blob/dev/src/cops_and_robots/fusion/gaussian_mixture.py
 
+		Now valid for negative weights
+		If mixture contains all identical mixands at any point, it returns the mixture as is. 
+
 		'''
 
 		if max_num_mixands is None:
@@ -527,7 +589,7 @@ class GM:
 		#specifically if they're weighted really really low
 		dels = []; 
 		for g in self.Gs:
-			if(g.weight < 0.000001):
+			if(abs(g.weight) < 0.000001):
 				dels.append(g);
 
 		for rem in dels:
@@ -535,10 +597,10 @@ class GM:
 				self.Gs.remove(rem);
 				self.size = self.size-1; 
 
+
 		#Check if merging is useful
 		if self.size <= max_num_mixands:
-		    return
-
+			return 0; 
 
 		# Create lower-triangle of dissimilarity matrix B
 		#<>TODO: this is O(n ** 2) and very slow. Speed it up! parallelize?
@@ -562,8 +624,9 @@ class GM:
 			try:
 				min_B = B[B>0].min()
 			except:
-				self.display(); 
-				raise; 
+				#self.display(); 
+				#raise; 
+				return; 
 
 
 
@@ -624,11 +687,12 @@ class GM:
 		w_j, mu_j, P_j = mix_j
 		_, _, P_ij = self.merge_mixands(mix_i, mix_j)
 
+		'''
 		#TODO: This is different
 		if(w_i < 0 and w_j< 0):
 			w_i = abs(w_i); 
 			w_j = abs(w_j); 
-
+		'''
 
 		if(P_ij.ndim == 1 or len(P_ij.tolist()[0]) == 1):
 				if(not isinstance(P_ij,(int,list,float))):
@@ -669,7 +733,6 @@ class GM:
 		#print(logdet_P_ij,logdet_P_j,logdet_P_i)
 
 		b = 0.5 * ((w_i + w_j) * logdet_P_ij - w_i * logdet_P_i - w_j * logdet_P_j)
-
 		return b
 
 	def merge_mixands(self,mix_i, mix_j):
@@ -717,6 +780,7 @@ class GM:
 			for i in range(0,len(a)):
 				c[i] = a[i]-b[i]; 
 			return c; 
+
 
 	
 
@@ -824,18 +888,18 @@ def TestCondense():
 	high = 10; 
 	num = 1000; 
 	x = np.linspace(low,high,num);
-	testPlot = test.plot(low=low,high = high,num=num,vis = False); 
+	[x0,testPlot] = test.plot(low=low,high = high,num=num,vis = False); 
 
 	test.condense(10); 
-	testCondensePlot = test.plot(low=low,high = high,num=num,vis = False);
+	[x1,testCondensePlot] = test.plot(low=low,high = high,num=num,vis = False);
 
 	testKmeans = testKmeans.kmeansCondensationN(k=10,lowInit = low, highInit = high); 
-	testKmeansPlot = testKmeans.plot(low=low,high = high,num=num,vis = False);
+	[x2,testKmeansPlot] = testKmeans.plot(low=low,high = high,num=num,vis = False);
 
 
-	plt.plot(x,testPlot); 
-	plt.plot(x,testCondensePlot);
-	plt.plot(x,testKmeansPlot); 
+	plt.plot(x0,testPlot); 
+	plt.plot(x1,testCondensePlot);
+	plt.plot(x2,testKmeansPlot); 
 	plt.legend(['Original Mixture','Condensed Mixture (Runnalls)','Condensed Mixture (K-means Runnalls)']);
 	plt.title('Condensation Test: 100 to 10 mixands')
 	plt.show(); 
@@ -858,9 +922,9 @@ def TestCondense2D():
 	axarr[0].contourf(x1,y1,c1,cmap = 'viridis'); 
 	axarr[0].set_title('Original Mixture');  
 	axarr[1].contourf(x2,y2,c2,cmap = 'viridis'); 
-	axarr[0].set_title('Runnalls Method Condensed Mixture'); 
+	axarr[1].set_title('Runnalls Method Condensed Mixture'); 
 	axarr[2].contourf(x3,y3,c3,cmap = 'viridis'); 
-	axarr[0].set_title('K-means + Runnalls Method Condensed Mixture'); 
+	axarr[2].set_title('K-means + Runnalls Method Condensed Mixture'); 
 	plt.suptitle('2D Condensation Test: 100 to 10 mixands'); 
 	plt.show(); 
 
@@ -881,16 +945,21 @@ def TestComparison():
 	print('Test1 and Test2: ' + str(test1.comp(test2))); 
 	print('Test1 and Test3: ' + str(test1.comp(test3))); 
 
+
 if __name__ == "__main__":
 
 	#TestGMProduct();
-	Test2DGMProduct();
+	#Test2DGMProduct();
 	#Test4DGMProduct();   
 	#TestTextFilePrinting();
-	#TestCondense(); 
+	TestCondense(); 
 	#TestCondense2D(); 
 	#TestComparison(); 
 
 
+	
+
+	
+	
 
 
