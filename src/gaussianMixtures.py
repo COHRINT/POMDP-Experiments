@@ -19,7 +19,7 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.0.4"
+__version__ = "1.0.6"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
@@ -61,7 +61,16 @@ class Gaussian:
 		print("Variance: "); 
 		print(self.var); 
 		print("Weight"); 
-		print(self.weight); 
+		print(self.weight);
+
+	def fullComp(self,b):
+		if(not np.array_equal(self.mean,b.mean)):
+			return False; 
+		if(not np.array_equal(self.var,b.var)):
+			return False; 
+		if(self.weight != b.weight):
+			return False; 
+		return True; 
 
 
 
@@ -440,6 +449,18 @@ class GM:
 			ans.addGM(c);  
 		ans.action = self.action; 
 
+		#Make sure everything is positive semidefinite
+		#TODO: dont just remove them, fix them?
+		dels = []; 
+		for g in ans.Gs:
+			if(det(np.matrix(g.var)) <= 0):
+				dels.append(g); 
+		for rem in dels:
+			if(rem in ans.Gs):
+				ans.Gs.remove(rem);
+				ans.size -= 1 
+
+
 		#return the resulting GMM
 		return ans;
 	
@@ -598,6 +619,20 @@ class GM:
 
 
 		#Check if any mixands are identical
+		dels = []; 
+		for i in range(0,self.size):
+			for j in range(0,self.size):
+				if(i==j):
+					continue;
+				g1 = self.Gs[i]; 
+				g2 = self.Gs[j]; 
+				if(g1.fullComp(g2) and g1 not in dels):
+					dels.append(g2); 
+					g1.weight = g1.weight*2; 
+		for rem in dels:
+			if(rem in self.Gs):
+				self.Gs.remove(rem);
+				self.size = self.size-1; 
 
 
 		#Check if merging is useful
@@ -622,13 +657,12 @@ class GM:
 		toRemove = []; 
 		while self.size > max_num_mixands:
 		    # Find most similar mixands
-		   
+
 			try:
-				min_B = B[B>0].min()
+				min_B = B[abs(B)>0].min()
 			except:
-				#self.display(); 
-				#raise; 
-				return; 
+				self.display(); 
+				raise;  
 
 
 
@@ -677,6 +711,17 @@ class GM:
 		for rem in toRemove:
 			if(rem in self.Gs):
 				self.Gs.remove(rem); 
+
+		#Make sure everything is positive semidefinite
+		#TODO: dont just remove them, fix them?
+		dels = []; 
+		for g in self.Gs:
+			if(det(np.matrix(g.var)) <= 0):
+				dels.append(g); 
+		for rem in dels:
+			if(rem in self.Gs):
+				self.Gs.remove(rem);
+				self.size -= 1 
 		
 
 		
@@ -769,7 +814,7 @@ class GM:
 
 
 
-	    return w_ij, mu_ij, abs(P_ij)
+	    return w_ij, mu_ij, P_ij
 
 	def subMu(self,a,b):
 
@@ -782,6 +827,8 @@ class GM:
 			for i in range(0,len(a)):
 				c[i] = a[i]-b[i]; 
 			return c; 
+
+
 
 	
 
