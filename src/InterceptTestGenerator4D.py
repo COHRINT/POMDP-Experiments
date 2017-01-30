@@ -61,6 +61,8 @@ class InterceptTestGenerator:
 		self.exitFlag = False; 
 		self.b = None; 
 		self.buildTransition(); 
+
+		
 		if(gen==True):
 			print("Building Observation Models"); 
 		if(altObs):
@@ -197,9 +199,32 @@ class InterceptTestGenerator:
 					if(self.continuousDot(al,bprime) >= Value[self.findB(bprime)]):
 						BTilde.remove(bprime); 
 
-				GammaNew += [al];
 
 
+				#make sure the alpha doesn't already exist
+				addFlag = True; 
+				for i in range(0,len(GammaNew)):
+					if(al.comp(GammaNew[i])):
+						addFlag = False; 
+				if(addFlag):
+					GammaNew += [al];
+
+
+			#Test the results from just combining all the alphas into one big one for each action
+			tmp = [0]*len(self.delA); 
+			gamcount = [0]*len(self.delA); 
+			for i in range(0,len(tmp)):
+				tmp[i] = GM([50,50,50,50],[[1,0,.7,0],[0,1,0,.7],[.7,0,1,0],[0,.7,0,1]], 0.0001); 
+				tmp[i].action = i; 
+			for g in GammaNew:
+				tmp[g.action].addGM(g);
+				gamcount[g.action] = gamcount[g.action] + 1;  
+			GammaNew = tmp; 
+			
+			for i in range(0,len(GammaNew)):
+				if(gamcount[i] != 0):
+					GammaNew[i].scalerMultiply(1/gamcount[i]); 
+			
 		
 			
 			if(verbose and self.exitFlag == False):
@@ -426,8 +451,10 @@ class InterceptTestGenerator:
 		if(gen):
 			#Intialize Value function
 			self.ValueFunc = copy.deepcopy(self.r); 
-			for g in self.ValueFunc.Gs:
-				g.weight = -1000; 
+
+			#TODO: Uncomment
+			#for g in self.ValueFunc.Gs:
+				#g.weight = -1000; 
 
 			comparision = GM(); 
 			comparision.addG(Gaussian([1,0,0,0],[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],1)); 
@@ -442,7 +469,8 @@ class InterceptTestGenerator:
 			count = 0; 
 
 			#until convergence
-			while(not self.ValueFunc.comp(comparision) and count < 30):
+			#TODO: Should be count < 100ish
+			while(not self.ValueFunc.fullComp(comparision) and count < 0):
 				print(count); 
 				comparision = copy.deepcopy(self.ValueFunc); 
 				count += 1;
@@ -462,7 +490,7 @@ class InterceptTestGenerator:
 						maxGM = copy.deepcopy(suma); 
 
 				maxGM.scalerMultiply(self.discount); 
-				maxGM = maxGM.kmeansCondensationN(20); 
+				maxGM = maxGM.kmeansCondensationN(60); 
 				self.ValueFunc = copy.deepcopy(maxGM); 
 
 			#self.ValueFunc.display(); 
@@ -470,11 +498,13 @@ class InterceptTestGenerator:
 			print("MDP Value Iteration Complete");
 			#f = open("../policies/MDP4DIntercept.npy","w"); 
 			#np.save(f,self.ValueFunc);
-			file = "../policies/MDP4DIntercept"; 
+			#file = "../../policies/MDP4DIntercept_2"; 
+			file = 'MDP4DIntercept_2'; 
 			self.ValueFunc.printGMArrayToFile([self.ValueFunc],file); 
 		else:
 			#self.ValueFunc = np.load("../policies/MDP4DIntercept.npy").tolist(); 
-			file = "../policies/MDP4DIntercept"; 
+			#file = "../../policies/MDP4DIntercept_2"; 
+			file = 'MDP4DIntercept_2'; 
 			tmp = GM(); 
 			self.ValueFunc = tmp.readGMArray4D(file)[0]; 
 
@@ -686,20 +716,21 @@ class InterceptTestGenerator:
 			var = [[1,0,.7,0],[0,1,0,.7],[.7,0,1,0],[0,.7,0,1]];  
 			for i in range(-2,8):
 				for j in range(-2,8):
-					self.r.addG(Gaussian([i,j,i,j],var,5.6));
+					self.r.addG(Gaussian([i,j,i,j],var,10));
 
+			'''
 			for i in range(-2,8):
 				for j in range(-2,8):
 					for k in range(-2,8):
 						for l in range(-2,8):
 							if(abs(i-j) >=2 or abs(k-l) >= 2):
 								self.r.addG(Gaussian([i,j,k,l],var,-1)); 
-
+			'''
 			print('Plotting Reward Model'); 
 			self.plotAllSlices(self.r,title = 'Uncondensed Reward');
 
 			print('Condensing Reward Model'); 
-			self.r.condense(50); 
+			self.r.condense(100); 
 
 			print('Plotting Condensed Reward Model'); 
 			self.plotAllSlices(self.r,title = 'Condensed Reward');
@@ -741,6 +772,7 @@ class InterceptTestGenerator:
 				btmp.addG(Gaussian(smean,sig,w)); 
 
 		
+		btmp.normalizeWeights(); 
 		btmp = btmp.kmeansCondensationN(maxMix); 
 		#btmp.condense(maxMix); 
 		btmp.normalizeWeights();
@@ -755,7 +787,11 @@ class InterceptTestGenerator:
 	def getNextPose(self,x,isCop = True,exclude = []):
 		plotFlag = True; 
 		if(self.b == None):
-			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],1); 
+			self.b = GM([x[0],x[1],2.5,2.5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],.2);
+			self.b.addG(Gaussian([x[0],x[1],0,0],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],.2))
+			self.b.addG(Gaussian([x[0],x[1],0,5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],.2))
+			self.b.addG(Gaussian([x[0],x[1],5,0],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],.2))
+			self.b.addG(Gaussian([x[0],x[1],5,5],[[0.01,0,0,0],[0,0.01,0,0],[0,0,5,0],[0,0,0,5]],.2)) 
 			plotFlag = False; 
 		
 		prevX = copy.deepcopy(x); 
@@ -820,8 +856,8 @@ class InterceptTestGenerator:
 		#x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
 		x[0] = x[0] + self.delA[act][0]; 
 		x[1] = x[1] + self.delA[act][1]; 
-		x[2] = x[2] + self.delA[act][2] + (random.random() - 0.5);
-		x[3] = x[3] + self.delA[act][3] + (random.random() - 0.5);
+		x[2] = x[2] + self.delA[act][2] + (random.random()*2 - 1);
+		x[3] = x[3] + self.delA[act][3] + (random.random()*2 - 1);
 
 		x[0] = min(x[0],5); 
 		x[0] = max(x[0],0); 
@@ -946,6 +982,8 @@ class InterceptTestGenerator:
 		else:
 			self.Gamma = np.load(policy); 
 
+
+
 			for count in range(0,numSteps):
 				
 				if(human):
@@ -993,8 +1031,11 @@ class InterceptTestGenerator:
 				else:
 					act = self.getAction(b);
 
+				
+
  				if((x[0] == 0 and act == 0) or (x[0] == 5 and act == 1) or (x[1] == 0 and act == 2) or (x[1] == 5 and act == 3)):
  					act = 4; 
+				
 				
 				
 				x = np.random.multivariate_normal([x[0] + self.delA[act][0],x[1] + self.delA[act][1],x[2]+self.delA[act][2],x[3]+self.delA[act][3]],self.delAVar,size =1)[0].tolist();
@@ -1192,7 +1233,7 @@ if __name__ == "__main__":
 	#Solver Params
 	sol = False;
 	iterations = 500; 
-	discount = 0.4; 
+	discount = 0.9; 
 	altObs = True; 
 
 	#controls obs and reward generation
@@ -1205,14 +1246,14 @@ if __name__ == "__main__":
 	randStep = 3; 
 	numStep = 100; 
 
-	humanInput = False;
+	humanInput = True;
 
 	mdpPolicy = False;  
 	mdpGen = False; 
 
 	greedySim = False; 
 
-	qmdp = False; 
+	qmdp = True; 
 
 	mulSim = False; 
 	simCount = 10; 
@@ -1227,10 +1268,15 @@ if __name__ == "__main__":
 	a = InterceptTestGenerator(beliefFile = belLoad,dis = discount,gen = generate,altObs = altObs,qGen = True,humObs = hObs); 
 	signal.signal(signal.SIGINT, a.signal_handler);
 	
-	
+	'''
+	pol = np.load(alLoad); 
+	for g in pol:
+		g.display(); 
+	'''
+
 	if(hardware):
 		x = [1,1,4,3]; 
-		for i in range(0,20):
+		for i in range(0,25):
 			#a.getHumanObservation();  
 			x = a.getNextPose(x,True);
 			if(a.exitFlag):
