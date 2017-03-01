@@ -19,7 +19,7 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.0.6"
+__version__ = "1.0.8"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
@@ -830,137 +830,6 @@ class GM:
 			for i in range(0,len(a)):
 				c[i] = a[i]-b[i]; 
 			return c; 
-
-
-	def Estep(self,weight,bias,prior_mean,prior_var,alpha = 0.5,zeta_c = 1,modelNum=0):
-		
-		#start the VB EM step
-		lamb = [0]*len(weight); 
-
-		for i in range(0,len(weight)):
-			lamb[i] = self._lambda(zeta_c[i]); 
-
-		hj = 0;
-
-		suma = 0; 
-		for c in range(0,len(weight)):
-			if(modelNum != c):
-				suma += weight[c]; 
-
-		tmp2 = 0; 
-		for c in range(0,len(weight)):
-			tmp2+=lamb[c]*(alpha-bias[c])*weight[c]; 
-	 
-		hj = 0.5*(weight[modelNum]-suma)+2*tmp2; 
-
-
-
-
-		Kj = 0; 
-		for c in range(0,len(weight)):
-			Kj += lamb[c]*weight[c]*weight[c]; 
-		Kj = Kj*2; 
-
-		Kp = prior_var**-1; 
-		hp = Kp*prior_mean; 
-
-		Kl = Kp+Kj; 
-		hl = hp+hj; 
-
-		mean = (Kl**-1)*hl; 
-		var = Kl**-1; 
-
-
-		yc = [0]*len(weight); 
-		yc2= [0]*len(weight); 
-
-		for c in range(0,len(weight)):
-			yc[c] = weight[c]*mean + bias[c]; 
-			yc2[c] = weight[c]*(var + mean*mean)*weight[c] + 2*weight[c]*mean*bias[c] + bias[c]**2; 
-
-
-		return [mean,var,yc,yc2]; 
-
-
-	def Mstep(self,m,yc,yc2,zeta_c,alpha,steps):
-
-		z = zeta_c; 
-		a = alpha; 
-
-		for i in range(0,steps):
-			for c in range(0,len(yc)):
-				z[c] = math.sqrt(yc2[c] + a**2 - 2*a*yc[c]); 
-
-			num_sum = 0; 
-			den_sum = 0; 
-			for c in range(0,len(yc)):
-				num_sum += self._lambda(z[c])*yc[c]; 
-				den_sum += self._lambda(z[c]); 
-
-			a = ((m-2)/4 + num_sum)/den_sum; 
-
-		return [z,a]
-
-
-	def _lambda(self,zeta):
-		return (1/(2*zeta))*(1/(1+math.exp(-zeta)) - 1/2);
-
-
-	def calcCHat(self,prior_mean,prior_var,mean,var,alpha,zeta_c,yc,yc2,mod):
-		prior_var = np.matrix(prior_var); 
-		prior_mean = np.matrix(prior_mean); 
-		var_hat = np.matrix(var); 
-		mu_hat = np.matrix(mean); 
-
-		
-		#KLD = 0.5*(np.log(prior_var/var) + prior_var**-1*var + (prior_mean-mean)*(prior_var**-1)*(prior_mean-mean)); 
-
-		KLD = 0.5 * (np.log(det(prior_var) / det(var_hat)) +
-							np.trace(inv(prior_var) .dot (var_hat)) +
-							(prior_mean - mu_hat).T .dot (inv(prior_var)) .dot
-							(prior_mean - mu_hat));
-
-
-		suma = 0; 
-		for c in range(0,len(zeta_c)):
-			suma += 0.5 * (alpha + zeta_c[c] - yc[c]) \
-	                    - self._lambda(zeta_c[c]) * (yc2[c] - 2 * alpha
-	                    * yc[c] + alpha ** 2 - zeta_c[c] ** 2) \
-	                    - np.log(1 + np.exp(zeta_c[c])) 
-		return yc[mod] - alpha + suma - KLD + 1; 
-
-		
-
-
-	def numericalProduct(self,likelihood,x):
-		prod = [0 for i in range(0,len(likelihood))]; 
-
-		for i in range(0,len(x)):
-			prod[i] = self.pointEval(x[i])*likelihood[i]; 
-		return prod; 
-
-
-	def runVB(self,weight,bias,alpha,zeta_c,softClassNum):
-		post = GM(); 
-		
-		for g in self.Gs:
-			prevLogCHat = -1000; 
-
-			count = 0; 
-			while(count < 100000):
-				
-				count = count+1; 
-				[mean,var,yc,yc2] = self.Estep(weight,bias,g.mean,g.var,alpha,zeta_c,modelNum =softClassNum);
-				[zeta_c,alpha] = self.Mstep(len(weight),yc,yc2,zeta_c,alpha,steps = 20);
-				logCHat = self.calcCHat(g.mean,g.var,mean,var,alpha,zeta_c,yc,yc2,mod=softClassNum); 
-				if(abs(prevLogCHat - logCHat) < 0.00001):
-					break; 
-				else:
-					prevLogCHat = logCHat; 
-
-			post.addG(Gaussian(mean,var,g.weight*np.exp(logCHat).tolist()[0][0]))
-			
-		return post;
 
 	
 
