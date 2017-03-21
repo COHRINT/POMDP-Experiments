@@ -19,7 +19,7 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
@@ -210,6 +210,7 @@ class GM:
 
 		x, y = np.mgrid[low[0]:high[0]:(float(high[0]-low[0])/res), low[1]:high[1]:(float(high[1]-low[1])/res)]
 
+
 		
 
 		pos = np.dstack((x, y)) 
@@ -224,6 +225,7 @@ class GM:
 				g.display();
 				raise; 
 
+		
 
 		if(vis):
 			fig,ax = plt.subplots(); 
@@ -441,6 +443,10 @@ class GM:
 				converge = True; 
 			count = count+1; 
 
+			for i in range(0,len(newMeans)):
+				for j in range(0,len(newMeans[i])):
+					means[i][j] = newMeans[i][j];
+
 		#condense each cluster
 		for c in clusters:
 			c.condense(1); 
@@ -466,6 +472,8 @@ class GM:
 		#return the resulting GMM
 		return ans;
 	
+
+
 
 	def printClean(self,slices):
 		'''
@@ -1002,8 +1010,8 @@ if __name__ == "__main__":
 	#Test4DGMProduct();   
 	#TestTextFilePrinting();
 	#TestCondense(); 
-	#TestCondense2D(); 
-	TestComparison(); 
+	TestCondense2D(); 
+	#TestComparison(); 
 
 
 	
