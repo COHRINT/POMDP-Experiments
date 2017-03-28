@@ -1,0 +1,332 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>GMdesign</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-10-31"><meta name="DC.source" content="GMdesign.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">MultiDimensional</a></li></ul></div><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">%% Single Dimensional
+</span><span class="comment">clf;
+</span><span class="comment">
+</span><span class="comment">weight1 = 11;
+</span><span class="comment">gm1 = gmdistribution([0.5;1;1.5;2;2.5;3;3.5;4;4.5;5;5.5],[1/16],[weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1]);
+</span><span class="comment">gm2 = gmdistribution([0],[1/16],[.5]);
+</span><span class="comment">
+</span><span class="comment">
+</span><span class="comment">
+</span><span class="comment">tmp = 0:0.001:5;
+</span><span class="comment">tmp2 = 0:0.001:5;
+</span><span class="comment">tmp3 = 0:0.001:5;
+</span><span class="comment">for i = 1:length(tmp)
+</span><span class="comment">    tmp(i) = pdf(gm1,tmp(i));
+</span><span class="comment">    tmp3(i) = pdf(gm2,tmp3(i));
+</span><span class="comment">end
+</span><span class="comment">
+</span><span class="comment">k1 = 5.5;
+</span><span class="comment">k2 = .5;
+</span><span class="comment">
+</span><span class="comment">figure(1);
+</span><span class="comment">plot(tmp2,k1*tmp)
+</span><span class="comment">hold on;
+</span><span class="comment">plot(tmp2,k2*tmp3);
+</span><span class="comment">legend('Missed','Detected');
+</span><span class="comment">xlabel('Difference in Position');
+</span><span class="comment">ylabel('Probability');
+</span><span class="comment">title('Observation Model for Simple Target Tracking');
+</span><span class="comment">
+</span><span class="comment">
+</span><span class="comment">tst = k1*tmp+k2*tmp3;
+</span><span class="comment">mean(tst);
+</span><span class="comment">var(tst);
+</span><span class="comment">figure(2);
+</span><span class="comment">plot(tst);
+</span><span class="comment">%}</span>
+</pre><h2 id="2">MultiDimensional</h2><pre class="codeinput">clf;
+clear <span class="string">all</span>;
+
+<span class="comment">% gm1 is detection, gm2 is no detect</span>
+var1 = [1 .8; .8 1];
+means1 = [[-1,-1];[0,0];[1,1];[2,2];[3,3];[4,4];[5,5];[6,6]];
+gm1 = gmdistribution(means1,var1);
+
+
+means2 = [];
+
+<span class="keyword">for</span> i = 1:12
+   means2 = [means2;[-1, -1+i; 0,0+i; 1,1+i; 2,2+i; 3,3+i; 4,4+i; 5,5+i; 6,6+i]];
+<span class="keyword">end</span>
+
+<span class="keyword">for</span> i = 1:12
+   means2 = [means2;[-1, -1-i; 0,0-i; 1,1-i; 2,2-i; 3,3-i; 4,4-i; 5,5-i; 6,6-i]];
+<span class="keyword">end</span>
+
+
+ezsurf(@(x,y)8*pdf(gm1,[x y]),[0 5],[0 5])
+title(<span class="string">'Probability of Detection: p(o=1|s)'</span>);
+xlabel(<span class="string">'Cops Position'</span>);
+ylabel(<span class="string">'Robbers Position'</span>);
+colorbar;
+
+
+
+gm2 = gmdistribution(means2,var1);
+
+figure();
+ezsurf(@(x,y)192*pdf(gm2,[x y]),[0 5],[0 5])
+title(<span class="string">'Probability of Not Detection: p(o=2|s)'</span>);
+xlabel(<span class="string">'Cops Position'</span>);
+ylabel(<span class="string">'Robbers Position'</span>);
+colorbar;
+
+
+figure();
+ezsurf(@(x,y)8.0*pdf(gm1,[x y]) + 192*pdf(gm2,[x y]),[0 5],[0 5])
+title(<span class="string">'Sanity check, p(o=1|s) + p(o=2|s)'</span>);
+xlabel(<span class="string">'Cops Position'</span>);
+ylabel(<span class="string">'Robbers Position'</span>);
+colorbar;
+
+<span class="comment">%{
+</span><span class="comment">figure();
+</span><span class="comment">ezsurf(@(x,y)45*pdf(gm1,[x y]) + -192*pdf(gm2,[x y]),[0 5],[0 5])
+</span><span class="comment">title('Reward Model');
+</span><span class="comment">xlabel('Cops Position');
+</span><span class="comment">ylabel('Robbers Position');
+</span><span class="comment">colorbar;
+</span><span class="comment">%}
+</span>
+
+
+figure();
+ezsurf(@(x,y)8*pdf(gm1,[x y]),[0 5],[0 5])
+view(2);
+title(<span class="string">'Probability of Detection: p(o=1|s)'</span>);
+xlabel(<span class="string">'Cops Position'</span>);
+ylabel(<span class="string">'Robbers Position'</span>);
+colorbar;
+
+
+figure();
+ezsurf(@(x,y)192*pdf(gm2,[x y]),[0 5],[0 5])
+view(2);
+title(<span class="string">'Probability of Not Detection: p(o=2|s)'</span>);
+xlabel(<span class="string">'Cops Position'</span>);
+ylabel(<span class="string">'Robbers Position'</span>);
+colorbar;
+
+
+figure();
+ezsurf(@(x,y)8.0*pdf(gm1,[x y]) + 192*pdf(gm2,[x y]),[0 5],[0 5])
+view(2);
+title(<span class="string">'Sanity check, p(o=1|s) + p(o=2|s)'</span>);
+xlabel(<span class="string">'Cops Position'</span>);
+ylabel(<span class="string">'Robbers Position'</span>);
+colorbar;
+
+<span class="comment">%{
+</span><span class="comment">figure();
+</span><span class="comment">ezsurf(@(x,y)45*pdf(gm1,[x y]) + -192*pdf(gm2,[x y]),[0 5],[0 5])
+</span><span class="comment">view(2);
+</span><span class="comment">title('Reward Model');
+</span><span class="comment">xlabel('Cops Position');
+</span><span class="comment">ylabel('Robbers Position');
+</span><span class="comment">colorbar;
+</span><span class="comment">%}</span>
+</pre><img src="GMTesting_files/GMdesign_01.png" alt="" vspace="5" hspace="5"> <img src="GMTesting_files/GMdesign_02.png" alt="" vspace="5" hspace="5"> <img src="GMTesting_files/GMdesign_03.png" alt="" vspace="5" hspace="5"> <img src="GMTesting_files/GMdesign_04.png" alt="" vspace="5" hspace="5"> <img src="GMTesting_files/GMdesign_05.png" alt="" vspace="5" hspace="5"> <img src="GMTesting_files/GMdesign_06.png" alt="" vspace="5" hspace="5"> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB® R2016b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+
+%{
+%% Single Dimensional
+clf; 
+
+weight1 = 11; 
+gm1 = gmdistribution([0.5;1;1.5;2;2.5;3;3.5;4;4.5;5;5.5],[1/16],[weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1;weight1]); 
+gm2 = gmdistribution([0],[1/16],[.5]); 
+
+
+
+tmp = 0:0.001:5; 
+tmp2 = 0:0.001:5; 
+tmp3 = 0:0.001:5; 
+for i = 1:length(tmp)
+    tmp(i) = pdf(gm1,tmp(i)); 
+    tmp3(i) = pdf(gm2,tmp3(i)); 
+end
+
+k1 = 5.5; 
+k2 = .5; 
+
+figure(1); 
+plot(tmp2,k1*tmp)
+hold on; 
+plot(tmp2,k2*tmp3); 
+legend('Missed','Detected'); 
+xlabel('Difference in Position');
+ylabel('Probability'); 
+title('Observation Model for Simple Target Tracking'); 
+
+
+tst = k1*tmp+k2*tmp3; 
+mean(tst);
+var(tst);
+figure(2); 
+plot(tst);
+%}
+
+%% MultiDimensional
+clf; 
+clear all; 
+
+% gm1 is detection, gm2 is no detect
+var1 = [1 .8; .8 1]; 
+means1 = [[-1,-1];[0,0];[1,1];[2,2];[3,3];[4,4];[5,5];[6,6]]; 
+gm1 = gmdistribution(means1,var1); 
+
+
+means2 = [];
+
+for i = 1:12
+   means2 = [means2;[-1, -1+i; 0,0+i; 1,1+i; 2,2+i; 3,3+i; 4,4+i; 5,5+i; 6,6+i]]; 
+end
+
+for i = 1:12
+   means2 = [means2;[-1, -1-i; 0,0-i; 1,1-i; 2,2-i; 3,3-i; 4,4-i; 5,5-i; 6,6-i]]; 
+end
+
+
+ezsurf(@(x,y)8*pdf(gm1,[x y]),[0 5],[0 5])
+title('Probability of Detection: p(o=1|s)'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar; 
+
+
+
+gm2 = gmdistribution(means2,var1); 
+
+figure(); 
+ezsurf(@(x,y)192*pdf(gm2,[x y]),[0 5],[0 5])
+title('Probability of Not Detection: p(o=2|s)'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar; 
+
+
+figure(); 
+ezsurf(@(x,y)8.0*pdf(gm1,[x y]) + 192*pdf(gm2,[x y]),[0 5],[0 5]) 
+title('Sanity check, p(o=1|s) + p(o=2|s)'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar;
+
+%{
+figure(); 
+ezsurf(@(x,y)45*pdf(gm1,[x y]) + -192*pdf(gm2,[x y]),[0 5],[0 5])
+title('Reward Model'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar; 
+%}
+
+
+
+figure(); 
+ezsurf(@(x,y)8*pdf(gm1,[x y]),[0 5],[0 5])
+view(2); 
+title('Probability of Detection: p(o=1|s)'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar; 
+
+
+figure(); 
+ezsurf(@(x,y)192*pdf(gm2,[x y]),[0 5],[0 5])
+view(2); 
+title('Probability of Not Detection: p(o=2|s)'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar; 
+
+
+figure(); 
+ezsurf(@(x,y)8.0*pdf(gm1,[x y]) + 192*pdf(gm2,[x y]),[0 5],[0 5]) 
+view(2); 
+title('Sanity check, p(o=1|s) + p(o=2|s)'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar;
+
+%{
+figure(); 
+ezsurf(@(x,y)45*pdf(gm1,[x y]) + -192*pdf(gm2,[x y]),[0 5],[0 5])
+view(2); 
+title('Reward Model'); 
+xlabel('Cops Position');
+ylabel('Robbers Position'); 
+colorbar; 
+%}
+
+
+
+##### SOURCE END #####
+--></body></html>

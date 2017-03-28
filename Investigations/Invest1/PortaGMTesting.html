@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>TestPOMDP</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-10-31"><meta name="DC.source" content="TestPOMDP.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">clear <span class="string">all</span>;
+
+<span class="comment">%Changes</span>
+<span class="comment">%In UniformDistribution.m, added diag(ones(1,CS.dim)) instead of</span>
+<span class="comment">%ones(CS.dim)</span>
+<span class="comment">%</span>
+
+
+ncBelief = 4;
+ncAlpha=9;
+actionScale=0.5;
+
+S=CSpace([0;0],[5;5]);
+A=DSpace(3);
+O=DSpace(2);
+gamma=0.95;
+mu_a={[-actionScale;0] [actionScale;0] [0;0]};
+Sigma_a={[0.05,0; 0 0.05] [0.05,0; 0 0.05] [0.05,0; 0 0.05]};
+
+AM=CS_DA_ActionModel(S,A,mu_a,Sigma_a);
+
+so = [1 .8; .8 1];
+
+om{1} = GMixture(8*ones(1,8), <span class="keyword">...</span>
+    {Gaussian([-1;-1],so) Gaussian([0;0],so) Gaussian([1;1],so) Gaussian([2;2],so) <span class="keyword">...</span>
+    Gaussian([3;3],so) Gaussian([4;4],so) Gaussian([5;5],so) Gaussian([6;6],so)});
+
+
+<span class="keyword">for</span> i=-1:6
+   <span class="keyword">for</span> j=1:12
+       tmp{(i+1)*6+j} = Gaussian([i;i+j],so);
+   <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+lentmp = length(tmp);
+<span class="keyword">for</span> i=-1:6
+   <span class="keyword">for</span> j=1:12
+       tmp{lentmp + (i+1)*6+j} = Gaussian([i;i-j],so);
+   <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+om{2} = GMixture(192*ones(1,108),tmp);
+
+OM = CS_DO_ObsModel(S,O,om);
+
+<span class="keyword">for</span> i=1:8
+   tmp{108+i} = Gaussian([i-2;i-2],so);
+<span class="keyword">end</span>
+
+rm{1} = GMixture([-192*ones(1,108),45*ones(1,8)], tmp);
+rm{2} = GMixture([-192*ones(1,108),45*ones(1,8)], tmp);
+rm{3} = GMixture([-192*ones(1,108),45*ones(1,8)], tmp);
+
+RM = CS_DA_RewardModel(S,A,rm);
+
+POMDP=CS_DO_DA_POMDP(<span class="string">'LukeTest2'</span>,S,A,O,AM,OM,RM,gamma,ncAlpha);
+
+
+g1=Gaussian([1;1],[50,0;0,50]);
+P.start=GBelief(GMixture([1 1 1 1],{g1 g1+[2;0] g1+[0;2] g1+[2;2]}),ncBelief);
+P.nBeliefs=10;
+P.dBelief=0.1;
+P.stepsXtrial=30;
+P.rMin=-0.5;
+P.rMax= 0.5;
+
+P.maxTime=100;
+P.stTime=100;
+P.numTrials=100;
+
+P.stopCriteria=@(n,t,vc)(t&gt;P.maxTime);
+
+plot = 1;
+
+<span class="keyword">if</span> plot == 1
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]),[0 5],[0 5])
+    title(<span class="string">'Probability of Detection: p(o=1|s)'</span>);
+    xlabel(<span class="string">'Cops Position'</span>);
+    ylabel(<span class="string">'Robbers Position'</span>);
+    colorbar;
+
+    figure();
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    title(<span class="string">'Probability of Not Detection: p(o=2|s)'</span>);
+    xlabel(<span class="string">'Cops Position'</span>);
+    ylabel(<span class="string">'Robbers Position'</span>);
+    colorbar;
+
+
+
+    figure();
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]) + Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    title(<span class="string">'Sanity check, p(o=1|s) + p(o=2|s)'</span>);
+    xlabel(<span class="string">'Cops Position'</span>);
+    ylabel(<span class="string">'Robbers Position'</span>);
+    colorbar;
+
+    figure();
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]),[0 5],[0 5])
+    view(2);
+    title(<span class="string">'Probability of Detection: p(o=1|s)'</span>);
+    xlabel(<span class="string">'Cops Position'</span>);
+    ylabel(<span class="string">'Robbers Position'</span>);
+    colorbar;
+
+    figure();
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    view(2);
+    title(<span class="string">'Probability of Not Detection: p(o=2|s)'</span>);
+    xlabel(<span class="string">'Cops Position'</span>);
+    ylabel(<span class="string">'Robbers Position'</span>);
+    colorbar;
+
+
+    figure();
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]) + Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    view(2);
+    title(<span class="string">'Sanity check, p(o=1|s) + p(o=2|s)'</span>);
+    xlabel(<span class="string">'Cops Position'</span>);
+    ylabel(<span class="string">'Robbers Position'</span>);
+    colorbar;
+<span class="keyword">end</span>
+
+
+<span class="comment">%{
+</span><span class="comment">
+</span><span class="comment">GenData=@()(TestRepWithStatistics(POMDP,P,1,1:2));
+</span><span class="comment">Results=GetData('Results/LukeTest2.mat',GenData);
+</span><span class="comment">figure()
+</span><span class="comment">errorbar(Results.tics,Results.SM.AV,Results.SD.AV);
+</span><span class="comment">xlabel('time (s)');
+</span><span class="comment">ylabel('Value')
+</span><span class="comment">%}</span>
+</pre><pre class="codeoutput">Warning: Function failed to evaluate on array inputs; vectorizing the function
+may speed up its evaluation and avoid the need to loop over array elements. 
+Warning: Function failed to evaluate on array inputs; vectorizing the function
+may speed up its evaluation and avoid the need to loop over array elements. 
+Warning: Function failed to evaluate on array inputs; vectorizing the function
+may speed up its evaluation and avoid the need to loop over array elements. 
+Warning: Function failed to evaluate on array inputs; vectorizing the function
+may speed up its evaluation and avoid the need to loop over array elements. 
+Warning: Function failed to evaluate on array inputs; vectorizing the function
+may speed up its evaluation and avoid the need to loop over array elements. 
+Warning: Function failed to evaluate on array inputs; vectorizing the function
+may speed up its evaluation and avoid the need to loop over array elements. 
+</pre><img src="PortaGMTesting_files/TestPOMDP_01.png" alt="" vspace="5" hspace="5"> <img src="PortaGMTesting_files/TestPOMDP_02.png" alt="" vspace="5" hspace="5"> <img src="PortaGMTesting_files/TestPOMDP_03.png" alt="" vspace="5" hspace="5"> <img src="PortaGMTesting_files/TestPOMDP_04.png" alt="" vspace="5" hspace="5"> <img src="PortaGMTesting_files/TestPOMDP_05.png" alt="" vspace="5" hspace="5"> <img src="PortaGMTesting_files/TestPOMDP_06.png" alt="" vspace="5" hspace="5"> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB® R2016b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clear all; 
+
+%Changes
+%In UniformDistribution.m, added diag(ones(1,CS.dim)) instead of
+%ones(CS.dim)
+%
+
+
+ncBelief = 4; 
+ncAlpha=9;
+actionScale=0.5;
+
+S=CSpace([0;0],[5;5]);
+A=DSpace(3);
+O=DSpace(2);
+gamma=0.95;
+mu_a={[-actionScale;0] [actionScale;0] [0;0]};
+Sigma_a={[0.05,0; 0 0.05] [0.05,0; 0 0.05] [0.05,0; 0 0.05]};
+
+AM=CS_DA_ActionModel(S,A,mu_a,Sigma_a);
+
+so = [1 .8; .8 1]; 
+
+om{1} = GMixture(8*ones(1,8), ...
+    {Gaussian([-1;-1],so) Gaussian([0;0],so) Gaussian([1;1],so) Gaussian([2;2],so) ...
+    Gaussian([3;3],so) Gaussian([4;4],so) Gaussian([5;5],so) Gaussian([6;6],so)});
+
+
+for i=-1:6
+   for j=1:12
+       tmp{(i+1)*6+j} = Gaussian([i;i+j],so); 
+   end
+end
+
+lentmp = length(tmp); 
+for i=-1:6
+   for j=1:12
+       tmp{lentmp + (i+1)*6+j} = Gaussian([i;i-j],so); 
+   end
+end
+
+om{2} = GMixture(192*ones(1,108),tmp); 
+
+OM = CS_DO_ObsModel(S,O,om);
+
+for i=1:8
+   tmp{108+i} = Gaussian([i-2;i-2],so);  
+end
+
+rm{1} = GMixture([-192*ones(1,108),45*ones(1,8)], tmp); 
+rm{2} = GMixture([-192*ones(1,108),45*ones(1,8)], tmp); 
+rm{3} = GMixture([-192*ones(1,108),45*ones(1,8)], tmp); 
+
+RM = CS_DA_RewardModel(S,A,rm);
+
+POMDP=CS_DO_DA_POMDP('LukeTest2',S,A,O,AM,OM,RM,gamma,ncAlpha);
+
+
+g1=Gaussian([1;1],[50,0;0,50]);
+P.start=GBelief(GMixture([1 1 1 1],{g1 g1+[2;0] g1+[0;2] g1+[2;2]}),ncBelief);
+P.nBeliefs=10;
+P.dBelief=0.1;
+P.stepsXtrial=30;
+P.rMin=-0.5;
+P.rMax= 0.5;
+
+P.maxTime=100;
+P.stTime=100;
+P.numTrials=100;
+
+P.stopCriteria=@(n,t,vc)(t>P.maxTime);
+
+plot = 1; 
+
+if plot == 1
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]),[0 5],[0 5])
+    title('Probability of Detection: p(o=1|s)'); 
+    xlabel('Cops Position');
+    ylabel('Robbers Position'); 
+    colorbar; 
+
+    figure(); 
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    title('Probability of Not Detection: p(o=2|s)'); 
+    xlabel('Cops Position');
+    ylabel('Robbers Position'); 
+    colorbar; 
+
+
+
+    figure(); 
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]) + Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    title('Sanity check, p(o=1|s) + p(o=2|s)'); 
+    xlabel('Cops Position');
+    ylabel('Robbers Position'); 
+    colorbar;
+
+    figure(); 
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]),[0 5],[0 5])
+    view(2); 
+    title('Probability of Detection: p(o=1|s)'); 
+    xlabel('Cops Position');
+    ylabel('Robbers Position'); 
+    colorbar; 
+
+    figure(); 
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    view(2); 
+    title('Probability of Not Detection: p(o=2|s)'); 
+    xlabel('Cops Position');
+    ylabel('Robbers Position'); 
+    colorbar; 
+
+
+    figure(); 
+    ezsurf(@(x,y)Value(GetObsModelFixedO(OM,1),[x;y]) + Value(GetObsModelFixedO(OM,2),[x;y]),[0 5],[0 5])
+    view(2); 
+    title('Sanity check, p(o=1|s) + p(o=2|s)'); 
+    xlabel('Cops Position');
+    ylabel('Robbers Position'); 
+    colorbar;
+end
+
+
+%{
+
+GenData=@()(TestRepWithStatistics(POMDP,P,1,1:2));
+Results=GetData('Results/LukeTest2.mat',GenData);
+figure()
+errorbar(Results.tics,Results.SM.AV,Results.SD.AV);
+xlabel('time (s)');
+ylabel('Value')
+%}
+##### SOURCE END #####
+--></body></html>
