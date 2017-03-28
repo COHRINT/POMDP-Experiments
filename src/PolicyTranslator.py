@@ -1,7 +1,7 @@
 
 from __future__ import division
 '''
-****************************************************
+************************************************************************************************************************************************************
 File: PolicyTranslator.py
 Written By: Luke Burks
 December 2016
@@ -10,7 +10,10 @@ This is intended as a template for POMDP policy
 translators. Ideally all problem specific bits
 will have been removed
 
-****************************************************
+Input: -n <problemName> -b <beliefSaveNumber> -a <alphaLoadNumber> -m <maxNumMixands> -g <greedySim> -s <useSoftmaxModels> -t <simType>
+Output: simulation data
+
+************************************************************************************************************************************************************
 '''
 
 
@@ -18,7 +21,7 @@ will have been removed
 __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __license__ = "GPL"
-__version__ = "0.1"
+__version__ = "1.1"
 __maintainer__ = "Luke Burks"
 __email__ = "clburks9@gmail.com"
 __status__ = "Development"

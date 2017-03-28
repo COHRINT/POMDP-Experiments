@@ -1,6 +1,29 @@
 from __future__ import division
 
 
+
+
+'''
+***********************************************************
+File: gaussianMixtures.py
+Classes: GM,Gaussian
+
+Allows for the creation, and use of Softmax functions
+
+
+***********************************************************
+'''
+
+__author__ = "Luke Burks"
+__copyright__ = "Copyright 2016, Cohrint"
+__credits__ = ["Luke Burks", "Nisar Ahmed"]
+__license__ = "GPL"
+__version__ = "1.0"
+__maintainer__ = "Luke Burks"
+__email__ = "luke.burks@colorado.edu"
+__status__ = "Development"
+
+
 import numpy as np; 
 import random;
 from random import random; 
@@ -17,7 +40,9 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy import compress
 
 
-#TODO: Get weights and biases from points
+
+
+
 
 class Softmax:
 
