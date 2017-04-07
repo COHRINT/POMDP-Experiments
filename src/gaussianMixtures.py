@@ -608,7 +608,7 @@ class GM:
 
 		for count in range(0,num):
 			cut = np.random.choice(range(0,len(w)),p=w);  
-			if(len(means[0]) == 1):
+			if(isinstance(means[0],int) or isinstance(means[0],float)):
 				samp = np.random.normal(means[cut],var[cut],1).tolist()[0]; 
 			else:
 				samp = np.random.multivariate_normal(means[cut],var[cut],1).tolist()[0]; 
@@ -1031,7 +1031,6 @@ def TestSample():
 	test1.addG(Gaussian(-5,1,.33)); 
 
 	samps = test1.sample(10000); 
-	print(samps); 
 	plt.hist(samps,normed=1,bins = 100); 
 	plt.show(); 
 

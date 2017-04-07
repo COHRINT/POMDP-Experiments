@@ -149,13 +149,12 @@ def MCPOMDP(b0,M=100,iterations=100):
 	#until convergence or time
 	for count in range(0,iterations):
 		#sample x from b
-		[mean,var] = (b0.getMeans()[0],b0.getVars()[0])
+		#[mean,var] = (b0.getMeans()[0],b0.getVars()[0])
 		#x = np.random.normal(mean,var); 
 
-		#sample particle set from b
-		X=[]; 
-		for i in range(0,M):
-			X.append(np.random.normal(mean,var)); 
+		#sample particle set from b 
+		X = b0.sample(M); 
+		
 		#for each episode?
 		for part in X:
 			Q = [0]*len(delA); 
