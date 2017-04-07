@@ -19,14 +19,14 @@ __author__ = "Luke Burks"
 __copyright__ = "Copyright 2016, Cohrint"
 __credits__ = ["Luke Burks", "Nisar Ahmed"]
 __license__ = "GPL"
-__version__ = "1.2"
+__version__ = "1.3"
 __maintainer__ = "Luke Burks"
 __email__ = "luke.burks@colorado.edu"
 __status__ = "Development"
 
 
 
-
+from matplotlib.colors import LogNorm
 import numpy as np; 
 import random;
 from random import random; 
@@ -593,6 +593,27 @@ class GM:
 			result.condense(cond); 
 		return result; 
 
+	def sample(self,num):
+		w = copy.deepcopy(self.getWeights()); 
+		suma = 0; 
+		for i in range(0,len(w)):
+			suma+=w[i]; 
+		for i in range(0,len(w)):
+			w[i] = w[i]/suma; 
+
+		means = self.getMeans(); 
+		var = self.getVars(); 
+
+		allSamps = []; 
+
+		for count in range(0,num):
+			cut = np.random.choice(range(0,len(w)),p=w);  
+			if(len(means[0]) == 1):
+				samp = np.random.normal(means[cut],var[cut],1).tolist()[0]; 
+			else:
+				samp = np.random.multivariate_normal(means[cut],var[cut],1).tolist()[0]; 
+			allSamps.append(samp); 
+		return allSamps; 
 
 
 
@@ -1002,6 +1023,30 @@ def TestComparison():
 	print('Test1 and Test2: ' + str(test1.fullComp(test2))); 
 	print('Test1 and Test3: ' + str(test1.fullComp(test3))); 
 
+def TestSample():
+	
+	test1 = GM(); 
+	test1.addG(Gaussian(0,1,.33)); 
+	test1.addG(Gaussian(10,1,.33)); 
+	test1.addG(Gaussian(-5,1,.33)); 
+
+	samps = test1.sample(10000); 
+	print(samps); 
+	plt.hist(samps,normed=1,bins = 100); 
+	plt.show(); 
+
+def TestSample2D():
+	
+	test1 = GM(); 
+	test1.addG(Gaussian([0,0],[[1,0],[0,1]],.33)); 
+	test1.addG(Gaussian([3,3],[[1,0],[0,1]],.33));
+	test1.addG(Gaussian([-2,-2],[[1,0],[0,1]],.33));
+
+	samps = test1.sample(10000); 
+	sampsx = [samps[i][0] for i in range(0,len(samps))]; 
+	sampsy = [samps[i][1] for i in range(0,len(samps))]; 
+	plt.hist2d(sampsx,sampsy,normed = 1,bins=100); 
+	plt.show(); 
 
 if __name__ == "__main__":
 
@@ -1010,9 +1055,10 @@ if __name__ == "__main__":
 	#Test4DGMProduct();   
 	#TestTextFilePrinting();
 	#TestCondense(); 
-	TestCondense2D(); 
+	#TestCondense2D(); 
 	#TestComparison(); 
-
+	#TestSample(); 
+	TestSample2D(); 
 
 	
 
