@@ -127,11 +127,11 @@ def shepardsInterpolation(V,XPRIME,al = .1,retDist=False):
 
 
 #Algorithm in Probabilistic Robotics by Thrun, page 560
-def MCPOMDP(b0,M=100,iterations=100):
+def MCPOMDP(b0,M=100,iterations=100,episodeLength=10):
 	V=[]; 
 	delA = [-1,1,0]; 
 	delAVar = 0.1;
-	R = GM(4,0.25,1); 
+	R = GM(2,0.1,1); 
 	simLoopsN = 10; 
 	gamma = .9; 
 
@@ -139,15 +139,16 @@ def MCPOMDP(b0,M=100,iterations=100):
 	alpha = 0.1; 
 
 	pz = [GM(),GM(),GM()]; 
-	for i in range(-10,4):
+	for i in range(-10,2):
 		pz[0].addG(Gaussian(i,1,1)); 
-	pz[1].addG(Gaussian(4,1,1)); 
-	for i in range(5,10):
+	pz[1].addG(Gaussian(2,1,1)); 
+	for i in range(3,10):
 		pz[2].addG(Gaussian(i,1,1));
 
 
 	#until convergence or time
 	for count in range(0,iterations):
+		print(count); 
 		#sample x from b
 		#[mean,var] = (b0.getMeans()[0],b0.getVars()[0])
 		#x = np.random.normal(mean,var); 
@@ -156,7 +157,8 @@ def MCPOMDP(b0,M=100,iterations=100):
 		X = b0.sample(M); 
 		
 		#for each episode?
-		for part in X:
+		for l in range(0,episodeLength):
+			part = np.random.choice(X); 
 			Q = [0]*len(delA); 
 			#for each action
 			for a in range(0,len(delA)):
@@ -266,45 +268,55 @@ def testParticleFilter():
 
 def displayPolicy(V):
 	for v in V:
-		plt.hist(v[0],normed=1,bins=10);
-		print(v[2]); 
-		plt.pause(0.1);  
+		if(v[2]==0):
+			col = 'b'; 
+		elif(v[2]==1):
+			col='g'; 
+		else:
+			col='r'; 
+		plt.hist(v[0],normed=1,bins=10,color=col);
+	
+	plt.show(); 
 
 def testMCPOMDP():
-	b = GM(4,1,1);
-	b.addG(Gaussian(-1,1,1)); 
-	b.addG(Gaussian(10,1,1));  
-	V= MCPOMDP(b,20,2); 
+	b = GM();
+	for i in range(-5,6):
+		b.addG(Gaussian(i,0.5,1)); 
+
+	V= MCPOMDP(b,20,20,3); 
 	
+	#The best one is 4
+	f = open('MCPolicy5.npy',"w");
+	np.save(f,V); 
+
+	numParticles = 100; 
+	testSet = [0]*11; 
+	acts = [0]*11; 
+	for i in range(0,len(testSet)):
+		testSet[i] = GM(i-5,1,1).sample(numParticles); 
+		[distSort1,dists1,eta1] = shepardsInterpolation(V,testSet[i],retDist=True); 
+		acts[i] = V[dists1.index(distSort1[0])][2]; 
+
+	for i in range(0,len(testSet)):
+		print(i-5,acts[i]); 
+
+
+	'''
+	plt.hist(testX1,normed=1,bins=10);
+	plt.hist(testX2,normed=1,bins=10);
+	plt.hist(testX3,normed=1,bins=10);
+	plt.show(); 
+
 	displayPolicy(V); 
+	'''
+	
 
-	numParticles = 10; 
-	testX1 = []; 
-	testX2 = []; 
-	testX3 = []; 
-	for i in range(0,numParticles):
-		testX1.append(np.random.normal(-2,0.5)); 
-		testX2.append(np.random.normal(4,0.5)); 
-		testX3.append(np.random.normal(10,0.5)); 
-
-
-	#test 1
-	[distSort1,dists1,eta1] = shepardsInterpolation(V,testX1,retDist=True); 
-	act1 = V[dists1.index(distSort1[0])][2]; 
-
-	#test 2
-	[distSort2,dists2,eta2] = shepardsInterpolation(V,testX2,retDist=True); 
-	act2 = V[dists2.index(distSort2[0])][2]; 
-
-	#test3
-	[distSort3,dists3,eta3] = shepardsInterpolation(V,testX3,retDist=True); 
-	act3 = V[dists3.index(distSort3[0])][2]; 
-
-	print(act1,act2,act3); 
 
 if __name__ == "__main__":
 
 	#testParticleFilter(); 
-	testMCPOMDP(); 
+	#testMCPOMDP(); 
 
+	V = np.load('MCPolicy4.npy').tolist(); 
+	displayPolicy(V); 
 
