@@ -267,6 +267,13 @@ def testParticleFilter():
 
 
 def displayPolicy(V):
+	plt.scatter(0,0.15,c='g'); 
+	plt.scatter(0,0.15,c='r'); 
+	plt.scatter(0,0.15,c='b');
+
+	plt.legend(['Right','Stay','Left']); 
+
+
 	for v in V:
 		if(v[2]==0):
 			col = 'b'; 
@@ -276,6 +283,8 @@ def displayPolicy(V):
 			col='r'; 
 		plt.hist(v[0],normed=1,bins=10,color=col);
 	
+	plt.title('MC-POMDP Policy with 100 Particles, Goal = 2')
+	plt.xlabel('Position')
 	plt.show(); 
 
 def testMCPOMDP():
