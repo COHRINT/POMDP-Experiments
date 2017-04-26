@@ -68,17 +68,18 @@ class PolicyTranslator:
 		self.iterations = 1000; 
 		self.useSoft = False; 
 		simNum = -1; 
-		greedy = False; 
+		self.greedy = False; 
+		robots = False; 
 
 		#Grab command line arguments for problem
 		try:
-		  opts, args = getopt.getopt(argv[1:],"hn:b:a:m:f:g:s:t:",["name=","belNum=","alLoadNum=",'maxMix=','greed=','softmax=','simType='])
+		  opts, args = getopt.getopt(argv[1:],"hn:b:a:m:f:g:s:t:r:",["name=","belNum=","alLoadNum=",'maxMix=','greed=','softmax=','simType=','robots='])
 		except getopt.GetoptError:
-		  print 'PolicyTranslator.py -n <problemName> -b <beliefSaveNumber> -a <alphaLoadNumber> -m <maxNumMixands> -g <greedySim> -s <useSoftmaxModels> -t <simType>'
+		  print 'PolicyTranslator.py -n <problemName> -b <beliefSaveNumber> -a <alphaLoadNumber> -m <maxNumMixands> -g <greedySim> -s <useSoftmaxModels> -t <simType> -r <robots>'
 		  sys.exit(2)
 		for opt, arg in opts:
 		  if opt == '-h':
-		    print 'PolicyTranslator.py -n <problemName> -b <beliefSaveNumber> -a <alphaLoadNumber> -m <maxNumMixands> -g <greedySim> -s <useSoftmaxModels> -t <simType>'
+		    print 'PolicyTranslator.py -n <problemName> -b <beliefSaveNumber> -a <alphaLoadNumber> -m <maxNumMixands> -g <greedySim> -s <useSoftmaxModels> -t <simType> -r <robots>'
 		    sys.exit()
 		  elif opt in ("-n", "--name"):
 		    self.problemName = arg
@@ -90,9 +91,9 @@ class PolicyTranslator:
 		  	self.maxMix = int(arg); 
 		  elif opt in ("-g","--greed"):
 		  	if(arg == 'True'):
-		  		greedy = True; 
+		  		self.greedy = True; 
 		  	else:
-		  		greedy = False;  
+		  		self.greedy = False;  
 		  elif opt in ("-s","--softmax"):
 		  	if(arg == 'True'):
 		  		self.useSoft = True; 
@@ -103,6 +104,10 @@ class PolicyTranslator:
 		  		simNum = 0; 
 		  	else:
 		  		simNum = int(arg); 
+		  elif opt in ("-r","--robots"):
+		  	if(arg == 'True'):
+		  		robots = True; 
+
 
 		if(self.problemName == ''):
 			print('Input Problem Name'); 
@@ -151,12 +156,13 @@ class PolicyTranslator:
 		#Initialize Gamma
 		self.loadPolicy(alLoad); 
 
-		if(simNum == 0):
+		
+		if(simNum == 0 and not robots):
 			self.generateBeliefs();
-		elif(simNum == 1):
-			self.runSingleSim(greedySim = greedy);
-		else:
-			self.runMultiSim(simCount = simNum,greedySim = greedy);  
+		elif(simNum == 1 and not robots):
+			self.runSingleSim(greedySim = self.greedy);
+		elif(not robots):
+			self.runMultiSim(simCount = simNum,greedySim = self.greedy);  
 
 
 
@@ -459,16 +465,78 @@ class PolicyTranslator:
 		return [allB,allX,allXInd,allAct,allReward]; 
 
 
+	def getNextPose(self,b):
+
+		#read in cop position
+		xc = [0,0]; 
+		#read in robber position
+		xr = [5,5]; 
+		#find difference, might have the terms switched
+		x = (np.array(xr) - np.array(xc)).tolist(); 
+
+
+		copFlag = False;  
+		if(b is None):
+			act = 4; 
+		else:
+			#shift belief by cop position
+			btilde = copy.deepcopy(b); 
+			for g in btilde:
+				g.mean = (np.array(g.mean)-np.array(xc)).tolist(); 
+
+			copFlag = True; 
+			if(self.greedy):
+				act = self.getGreedyAction(btilde); 
+			else:
+				act = self.getAction(btilde);
+ 
+		print(act); 
+
+		x = np.random.multivariate_normal(np.array(x)+np.array(self.delA[act]),self.delAVar,size =1)[0].tolist();
+
+		xr2 = (np.array(x) + np.array(xc)).tolist(); 
+		xc2 = (np.array(xr) - np.array(x)).tolist(); 
+
+		#read in observation
+		z = 0;
+
+		#update belief
+		if(self.useSoft and b is not None):
+			b = self.beliefUpdateSoftmax(btilde,act,z)
+		elif(b is not None):	
+			b = self.beliefUpdate(btilde,act,z); 
+
+		#send back belief and position
+		if(copFlag):
+			#shift back
+			btilde = copy.deepcopy(b); 
+			for g in btilde:
+				g.mean = (np.array(g.mean)+np.array(xc)).tolist(); 
+
+
+			return [btilde,xc2]; 
+		else:
+			return [b,xr2]; 
+
+
 	def signal_handler(self,signal, frame):
 		print("Stopping Simulation..."); 
 		self.exitFlag = True; 
 
+def testGetNextPose():
+	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','99','-g','True']; 	
+	a = PolicyTranslator(args);
 
+	b = GM(); 
+	b.addG(Gaussian([0,0],[[1,0],[0,1]],1)); 
+	for i in range(0,5):
+		[b,x] = a.getNextPose(b); 
+		b.plot2D(low = [-10,-10],high=[10,10]); 
 
 
 if __name__ == "__main__":
 
-	a = PolicyTranslator(sys.argv); 
-	
-	
+	#a = PolicyTranslator(sys.argv); 
+
+	testGetNextPose(); 
 	

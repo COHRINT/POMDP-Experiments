@@ -34,7 +34,7 @@ by differences in x and y dims
 The "Field of Tall Grass" problem, the cop knows 
 where he is, but can't see the robber
 
-Bounds from 0 to 5 on both dimensions 
+Bounds from 0 to 10 on both dimensions 
 ****************************************************
 
 
