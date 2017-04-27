@@ -336,7 +336,7 @@ class PolicyTranslator:
 		np.save(f,dataSave); 
 		f.close(); 
 
-	def runSingleSim(self,simSteps = 10,greedySim = False):
+	def runSingleSim(self,simSteps = 100,greedySim = False):
 		#Run a simulation
 		#Randomly choose initial state
 		inPose = [0 for i in range(0,len(self.delA[0]))];
@@ -425,7 +425,7 @@ class PolicyTranslator:
 				act = random.randint(0,len(self.delA)-1);
 			else:
 				act = self.getAction(b);
-
+			
 			#Take action
 			x = np.random.multivariate_normal(np.array(x)+np.array(self.delA[act]),self.delAVar,size =1)[0].tolist();
 			
@@ -465,58 +465,56 @@ class PolicyTranslator:
 		return [allB,allX,allXInd,allAct,allReward]; 
 
 
-	def getNextPose(self,b):
+	def getNextPose(self,b,o,x):
 
-		#read in cop position
-		xc = [0,0]; 
-		#read in robber position
-		xr = [5,5]; 
-		#find difference, might have the terms switched
-		x = (np.array(xr) - np.array(xc)).tolist(); 
+		copFlag = False; 
+		if(b is not None):
+			copFlag = True; 
 
+		xorig = copy.deepcopy(x); 
 
-		copFlag = False;  
-		if(b is None):
+		if(not copFlag):
 			act = 4; 
+			x = np.random.multivariate_normal(np.array(x)+np.array(self.delA[act]),self.delAVar,size =1)[0].tolist();
 		else:
 			#shift belief by cop position
 			btilde = copy.deepcopy(b); 
 			for g in btilde:
-				g.mean = (np.array(g.mean)-np.array(xc)).tolist(); 
+				g.mean = (np.array(g.mean)-np.array(xorig)).tolist(); 
 
 			copFlag = True; 
 			if(self.greedy):
+				print('greed'); 
 				act = self.getGreedyAction(btilde); 
+				if(act == 3):
+					act = 2; 
+				elif(act == 2):
+					act = 3; 
+
 			else:
 				act = self.getAction(btilde);
- 
-		print(act); 
 
-		x = np.random.multivariate_normal(np.array(x)+np.array(self.delA[act]),self.delAVar,size =1)[0].tolist();
 
-		xr2 = (np.array(x) + np.array(xc)).tolist(); 
-		xc2 = (np.array(xr) - np.array(x)).tolist(); 
-
-		#read in observation
-		z = 0;
+			x = (np.array(x) - np.array(self.delA[act])).tolist()
 
 		#update belief
-		if(self.useSoft and b is not None):
-			b = self.beliefUpdateSoftmax(btilde,act,z)
-		elif(b is not None):	
-			b = self.beliefUpdate(btilde,act,z); 
+		if(self.useSoft and copFlag):
+			print('soft'); 
+			b = self.beliefUpdateSoftmax(btilde,act,o)
+		elif(copFlag):	
+			b = self.beliefUpdate(btilde,act,o); 
+
 
 		#send back belief and position
 		if(copFlag):
 			#shift back
 			btilde = copy.deepcopy(b); 
 			for g in btilde:
-				g.mean = (np.array(g.mean)+np.array(xc)).tolist(); 
+				g.mean = (np.array(xorig)-np.array(g.mean)).tolist(); 
 
-
-			return [btilde,xc2]; 
+			return [btilde,x]; 
 		else:
-			return [b,xr2]; 
+			return [b,x]; 
 
 
 	def signal_handler(self,signal, frame):
@@ -524,14 +522,28 @@ class PolicyTranslator:
 		self.exitFlag = True; 
 
 def testGetNextPose():
-	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','99','-g','True']; 	
+	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','1','-g','True']; 	
 	a = PolicyTranslator(args);
 
 	b = GM(); 
-	b.addG(Gaussian([0,0],[[1,0],[0,1]],1)); 
-	for i in range(0,5):
-		[b,x] = a.getNextPose(b); 
-		b.plot2D(low = [-10,-10],high=[10,10]); 
+	b.addG(Gaussian([4,2],[[1,0],[0,1]],1)); 
+	x = [2,7]; 
+	obs = [2,2,2,2,2,2,2,0,0,0,0,0]; 
+
+	for i in range(0,len(obs)):
+		[b,x] = a.getNextPose(b,obs[i],x); 
+		print(b.findMAPN());  
+		x[0] = max(0,x[0]); 
+		x[0] = min(10,x[0]);
+		x[1] = max(0,x[1]); 
+		x[1] = min(10,x[1]);  
+		'''
+		print(x); 
+		[xx,yy,cc] = b.plot2D(low = [0,0],high=[10,10],vis = False); 
+		plt.contourf(xx,yy,cc,cmap='viridis'); 
+		plt.scatter(x[0],x[1]); 
+		plt.pause(0.5); 
+		'''
 
 
 if __name__ == "__main__":

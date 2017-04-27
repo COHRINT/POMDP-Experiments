@@ -63,7 +63,7 @@ class ModelSpec:
 		self.delAVar = (np.identity(2)*0.25).tolist(); 
 		#self.delA = [[-0.5,0],[0.5,0],[0,-0.5],[0,0.5],[0,0],[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5],[0.5,0.5]]; 
 		delta = 0.5; 
-		self.delA = [[-delta,0],[delta,0],[0,-delta],[0,delta],[0,0]]; 
+		self.delA = [[-delta,0],[delta,0],[0,delta],[0,-delta],[0,0]]; 
 		self.discount = 0.95; 
 
 		#set wall line segments
