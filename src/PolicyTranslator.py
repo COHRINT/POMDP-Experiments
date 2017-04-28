@@ -479,6 +479,9 @@ class PolicyTranslator:
 		elif(o==5):
 			z = 4; 
 
+		x[0] = x[0]*2; 
+		x[1] = x[1]*2; 
+
 		copFlag = False; 
 		if(b is not None):
 			copFlag = True; 
@@ -516,6 +519,8 @@ class PolicyTranslator:
 		elif(copFlag):	
 			b = self.beliefUpdate(btilde,act,z); 
 
+		x[0] = x[0]/2; 
+		x[1] = x[1]/2; 
 
 		#send back belief and position
 		if(copFlag):
