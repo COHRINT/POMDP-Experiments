@@ -495,7 +495,7 @@ class PolicyTranslator:
 			#shift belief by cop position
 			btilde = copy.deepcopy(b); 
 			for g in btilde:
-				g.mean = (np.array(g.mean)-np.array(xorig)).tolist(); 
+				g.mean = (np.array(g.mean)*2-np.array(xorig)).tolist(); 
 
 			copFlag = True; 
 			if(self.greedy):
@@ -528,7 +528,8 @@ class PolicyTranslator:
 			btilde = copy.deepcopy(b); 
 			for g in btilde:
 				g.mean = (np.array(xorig)-np.array(g.mean)).tolist(); 
-
+				g.mean[0] = g.mean[0]/2; 
+				g.mean[1] = g.mean[1]/2;
 			return [btilde,x]; 
 		else:
 			return [b,x]; 
