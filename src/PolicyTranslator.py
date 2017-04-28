@@ -522,6 +522,11 @@ class PolicyTranslator:
 		x[0] = x[0]/2; 
 		x[1] = x[1]/2; 
 
+		x[0] = min(x[0],5); 
+		x[0] = max(x[0],0); 
+		x[1] = min(x[1],5); 
+		x[1] = max(x[1],0); 
+
 		#send back belief and position
 		if(copFlag):
 			#shift back

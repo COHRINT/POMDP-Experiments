@@ -72,7 +72,7 @@ class PolicyGenerator:
 
 		#Grab command line arguments for problem
 		try:
-		  opts, args = getopt.getopt(argv[1:],"hn:b:a:m:f:g:s:",["name=","belNum=","alLoadNum=",'maxMix=','finalMix=','gen=','softmax='])
+		  opts, args = getopt.getopt(argv[1:],"hn:b:a:m:f:g:s:",["name=","belNum=","alSaveNum=",'maxMix=','finalMix=','gen=','softmax='])
 		except getopt.GetoptError:
 		  print 'PolicyGenerator.py -n <problemName> -b <initialBeliefNumber> -a <alphaSaveNumber> -m <maxNumMixands> -f <finalNumMixands> -g <generateNewModels> -s <useSoftmaxModels>'
 		  sys.exit(2)
@@ -133,6 +133,8 @@ class PolicyGenerator:
 		allMod.buildObs(gen=generate);
 		self.pz = allMod.pz;
 		
+		print(self.pz); 
+
 		#Build Reward Model
 		if(generate == True):
 			print("Building Reward Model"); 
