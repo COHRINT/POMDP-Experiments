@@ -467,6 +467,18 @@ class PolicyTranslator:
 
 	def getNextPose(self,b,o,x):
 
+		z = 0; 
+		if(o == 4):
+			z = 0; 
+		elif(o==6):
+			z = 1; 
+		elif(o==8):
+			z = 2; 
+		elif(o==2):
+			z = 3; 
+		elif(o==5):
+			z = 4; 
+
 		copFlag = False; 
 		if(b is not None):
 			copFlag = True; 
@@ -500,9 +512,9 @@ class PolicyTranslator:
 		#update belief
 		if(self.useSoft and copFlag):
 			print('soft'); 
-			b = self.beliefUpdateSoftmax(btilde,act,o)
+			b = self.beliefUpdateSoftmax(btilde,act,z)
 		elif(copFlag):	
-			b = self.beliefUpdate(btilde,act,o); 
+			b = self.beliefUpdate(btilde,act,z); 
 
 
 		#send back belief and position
