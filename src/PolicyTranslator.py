@@ -169,6 +169,28 @@ class PolicyTranslator:
 	def loadPolicy(self,fileName):
 		self.Gamma = np.load(fileName); 
 
+	def getRolloutAction(self,b,d=1):
+		if(d==0):
+			return 0; 
+		a = self.getAction(b); 
+		x = b.sample(1)[0]; 
+		r = self.R[a][x]; 
+		if(not self.useSoft):
+			ztrial = [0]*len(self.pz); 
+			for i in range(0,len(self.pz)):
+				ztrial[i] = self.pz[i].pointEval(x); 
+			z = ztrial.index(max(ztrial)); 
+			bprime = self.beliefUpdate(b,act,z);
+		else:
+			ztrial = [0]*self.pz.size; 
+			for i in range(0,self.pz.size):
+				ztrial[i] = self.pz.pointEval2D(i,x);  
+			z = ztrial.index(max(ztrial)); 
+			bprime = self.beliefUpdateSoftmax(b,act,z);
+
+
+		return r + self.getRolloutAction(bprime,d-1); 
+
 	def getAction(self,b):
 		act = self.Gamma[np.argmax([self.continuousDot(j,b) for j in self.Gamma])].action;
 		return act; 
@@ -509,6 +531,7 @@ class PolicyTranslator:
 			else:
 				act = self.getAction(btilde);
 
+			print(act); 
 
 			x = (np.array(x) - np.array(self.delA[act])).tolist()
 
@@ -545,21 +568,18 @@ class PolicyTranslator:
 		self.exitFlag = True; 
 
 def testGetNextPose():
-	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','1','-g','True']; 	
+	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','99','-g','False']; 	
 	a = PolicyTranslator(args);
 
 	b = GM(); 
-	b.addG(Gaussian([4,2],[[1,0],[0,1]],1)); 
-	x = [2,7]; 
+	b.addG(Gaussian([3,3],[[1,0],[0,1]],1)); 
+	x = [1,1]; 
 	obs = [2,2,2,2,2,2,2,0,0,0,0,0]; 
 
 	for i in range(0,len(obs)):
 		[b,x] = a.getNextPose(b,obs[i],x); 
-		print(b.findMAPN());  
-		x[0] = max(0,x[0]); 
-		x[0] = min(10,x[0]);
-		x[1] = max(0,x[1]); 
-		x[1] = min(10,x[1]);  
+		print(b.findMAPN());   
+
 		'''
 		print(x); 
 		[xx,yy,cc] = b.plot2D(low = [0,0],high=[10,10],vis = False); 
@@ -568,10 +588,33 @@ def testGetNextPose():
 		plt.pause(0.5); 
 		'''
 
+def testRolloutPolicy():
+	plt.plot([0,10,2,3,4,5]); 
+	plt.show(); 
+
+	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','1','-g','False']; 
+	a = PolicyTranslator(args); 
+
+	b = GM(); 
+	b.addG(Gaussian([3,3],[[1,0],[0,1]],1)); 
+	x = [1,1]; 
+	obs = [2,2,2,2,2,2,2,0,0,0,0,0]; 
+
+
+
+	#print(a.getAction(b)); 
+	#print(a.getRolloutAction(b,2)); 
+
+
+
 
 if __name__ == "__main__":
 
 	#a = PolicyTranslator(sys.argv); 
+	#import errno,sys,os; 
 
-	testGetNextPose(); 
+	#testGetNextPose(); 
+	#os.strerror(-6)
+	testRolloutPolicy(); 
+	
 	
