@@ -133,7 +133,6 @@ class PolicyGenerator:
 		allMod.buildObs(gen=generate);
 		self.pz = allMod.pz;
 		
-		print(self.pz); 
 
 		#Build Reward Model
 		if(generate == True):

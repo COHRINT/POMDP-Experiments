@@ -169,27 +169,28 @@ class PolicyTranslator:
 	def loadPolicy(self,fileName):
 		self.Gamma = np.load(fileName); 
 
-	def getRolloutAction(self,b,d=1):
+	def getRolloutReward(self,b,d=1):
 		if(d==0):
 			return 0; 
 		a = self.getAction(b); 
 		x = b.sample(1)[0]; 
-		r = self.R[a][x]; 
+		r = self.r[a].pointEval(x); 
 		if(not self.useSoft):
 			ztrial = [0]*len(self.pz); 
 			for i in range(0,len(self.pz)):
 				ztrial[i] = self.pz[i].pointEval(x); 
 			z = ztrial.index(max(ztrial)); 
-			bprime = self.beliefUpdate(b,act,z);
+			bprime = self.beliefUpdate(b,a,z);
 		else:
 			ztrial = [0]*self.pz.size; 
 			for i in range(0,self.pz.size):
 				ztrial[i] = self.pz.pointEval2D(i,x);  
 			z = ztrial.index(max(ztrial)); 
-			bprime = self.beliefUpdateSoftmax(b,act,z);
+			bprime = self.beliefUpdateSoftmax(b,a,z);
 
 
-		return r + self.getRolloutAction(bprime,d-1); 
+		return r + self.getRolloutReward(bprime,d-1); 
+
 
 	def getAction(self,b):
 		act = self.Gamma[np.argmax([self.continuousDot(j,b) for j in self.Gamma])].action;
@@ -589,32 +590,31 @@ def testGetNextPose():
 		'''
 
 def testRolloutPolicy():
-	plt.plot([0,10,2,3,4,5]); 
-	plt.show(); 
 
 	args = ['PolicyTranslator.py','-n','D2Diffs','-r','True','-a','1','-g','False']; 
 	a = PolicyTranslator(args); 
 
+	args2 = ['PolicyTranslator.py','-n','D2DiffsSoftmax','-r','True','-s','True','-a','1','-g','False']; 
+	c = PolicyTranslator(args2); 
+
 	b = GM(); 
-	b.addG(Gaussian([3,3],[[1,0],[0,1]],1)); 
-	x = [1,1]; 
-	obs = [2,2,2,2,2,2,2,0,0,0,0,0]; 
+	b.addG(Gaussian([0,3],[[1,0],[0,1]],1)); 
 
 
 
-	#print(a.getAction(b)); 
-	#print(a.getRolloutAction(b,2)); 
+	print(a.getAction(b),a.getRolloutReward(b,1)); 
+	print(c.getAction(b),c.getRolloutReward(b,1)); 
 
 
 
 
 if __name__ == "__main__":
-
-	#a = PolicyTranslator(sys.argv); 
-	#import errno,sys,os; 
+	#args = ['PolicyTranslator.py','-n','D2Diffs','-t','1','-a','1','-g','False'];
+	#a = PolicyTranslator(args); 
 
 	#testGetNextPose(); 
-	#os.strerror(-6)
+	
 	testRolloutPolicy(); 
+
 	
 	

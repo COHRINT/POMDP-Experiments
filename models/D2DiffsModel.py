@@ -182,7 +182,7 @@ class ModelSpec:
 if __name__ == '__main__':
 	a = ModelSpec(); 
 	a.buildTransition(); 
-	a.buildReward(gen = False); 
+	a.buildReward(gen = True); 
 	a.buildObs(gen = False); 
 	
 	
