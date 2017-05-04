@@ -33,35 +33,39 @@ class OnlineSolver():
 		modelClass = modelModule.ModelSpec;
 		self.model = modelClass();
 		self.N0 = 1; 
-		self.Q0 = -100; 
+		self.Q0 = 100; 
 		self.T = Node('',value = self.Q0,count=self.N0); 
 		for a in range(0,self.model.acts):
 			tmp = Node(self.T.name + str(a),parent = self.T,value=self.Q0,count=self.N0); 
-		RenderTreeGraph(self.T).to_picture('tree3.png');
+		
 		
 
 
 	def MCTS(self,bel,d):
 		h = ''; 
-		numLoops = 5; 
+		numLoops = 100; 
 
 		for i in range(0,numLoops):
 			s = np.random.choice([i for i in range(0,self.model.N)],p=bel);  
 			self.simulate(s,h,d); 
-		#RenderTreeGraph(self.T).to_picture('tree3.png'); 
+		#RenderTreeGraph(self.T).to_picture('tree1.png'); 
+		#print(RenderTree(self.T)); 
 		QH = [0]*self.model.acts; 
 		for a in range(0,self.model.acts):
 			QH[a] = [node.value for node in PreOrderIter(self.T,filter_=lambda n: n.name==h+str(a))][0]; 
-		
-		return np.argmax(QH[a] for a in range(0,self.model.acts)); 
+
+		act = np.argmax([QH[a] for a in range(0,self.model.acts)]);
+		return [act,QH[act]]; 
 
 	def simulate(self,s,h,d):
+
 		if(d==0):
 			return 0; 
 		if(len([node for node in PreOrderIter(self.T,filter_=lambda n: n.name==h)]) == 0):
-			newRoot = [node for node in PreOrderIter(self.T,filter_=lambda n: n.name==h[0:len(h)-2])][0];
+			newRoot = [node for node in PreOrderIter(self.T,filter_=lambda n: n.name==h[0:len(h)-1])][0];
 			for a in range(0,self.model.acts):
-				tmp = Node(newRoot.name + str(a),parent = newRoot,value=self.Q0,count=self.N0); 
+				tmp = Node(h + str(a),parent = newRoot,value=self.Q0,count=self.N0); 
+			tmp = Node(h,parent=newRoot,value = self.Q0,count=self.N0); 
 			return self.getRolloutReward(s,d); 
 		else:
 			QH = [0]*self.model.acts; 
@@ -72,9 +76,10 @@ class OnlineSolver():
 				NH[a] = [node.count for node in PreOrderIter(self.T,filter_=lambda n: n.name==h+str(a))][0]; 
 				NodeH[a] = [node for node in PreOrderIter(self.T,filter_=lambda n: n.name==h+str(a))][0]; 
 
-			aprime = np.argmax(QH[a] + np.sqrt(np.log(sum(NH)/NH[a])) for a in range(0,self.model.acts)); 
+			aprime = np.argmax([QH[a] + .1*np.sqrt(np.log(sum(NH)/NH[a])) for a in range(0,self.model.acts)]);  
+
 			[sprime,o,r] = self.generate(s,aprime); 
-			q = r + self.model.discount*self.simulate(sprime,h+str(a)+str(o),d-1); 
+			q = r + self.model.discount*self.simulate(sprime,h+str(aprime)+str(o),d-1); 
 			NodeH[aprime].count += 1; 
 			NodeH[aprime].value += (q-QH[a])/NH[a]; 
 			return q; 
@@ -86,28 +91,90 @@ class OnlineSolver():
 			ztrial[i] = self.model.pz[i][sprime]; 
 		z = ztrial.index(max(ztrial)); 
 		reward = self.model.R[a][s]; 
+		
+		if(a == 0 and s > 13):
+			reward = 10; 
+		elif(a==1 and s<13):
+			reward = 10; 
+		elif(a == 2 and s==13):
+			reward = 100;
+		else:
+			reward = -10; 
+		
+
 		return [sprime,z,reward]; 
 
 	def getRolloutReward(self,s,d=1):
 		reward = 0; 
 		for i in range(0,d):
 			a = np.random.randint(0,self.model.acts); 
+			'''
+			if(s < 13):
+				a = 1; 
+			elif(s>13):
+				a = 0; 
+			else:
+				a = 2; 
+			'''
 			reward += self.model.discount*self.model.R[a][s]; 
-			s = np.random.choice([i for i in range(0,self.model.N)],p=self.model.px[a][s]); 
+			s = np.random.choice([i for i in range(0,self.model.N)],p=self.model.px[a][s]);
 		return reward; 
 
+	def normalize(self,a):
+		suma = 0; 
+		b=[0]*len(a); 
+		for i in range(0,len(a)):
+			suma+=a[i]
+		for i in range(0,len(a)):
+			b[i] = a[i]/suma; 
+		return b; 
 
 
 def testMCTS():
-	a = OnlineSolver(); 
-	b = [0.001 for i in range(0,a.model.N)]; 
-	b[4] = 1; 
-	suma = sum(b); 
-	for i in range(0,len(b)):
-		b[i] = b[i]/suma; 
+	# a = OnlineSolver(); 
+	# b = [0.001 for i in range(0,a.model.N)]; 
+	# b[13] = 1; 
+	# b = a.normalize(b); 
 
-	action = a.MCTS(b,d=3); 
-	print(action); 
+	# action = a.MCTS(b,d=3); 
+
+
+	a = OnlineSolver();
+	allActs = [-1]*a.model.N; 
+	allUtils = [-100]*a.model.N;
+	for i in range(0,a.model.N):
+		a = OnlineSolver(); 
+		bel = [0.0001 for j in range(0,a.model.N)]; 
+		bel[i] = 1; 
+		bel = a.normalize(bel);
+		[allActs[i],allUtils[i]] = a.MCTS(bel,5); 
+
+	print(allActs); 
+
+	fig,axarr = plt.subplots(2,sharex=True); 
+
+	x = [i for i in range(0,a.model.N)]; 
+ 
+	axarr[0].plot(x,allUtils,linewidth=5);
+	axarr[0].set_title('MCTS Approximate Utility Function'); 
+
+	grid = np.ones(shape=(1,a.model.N)); 
+
+	
+	axarr[1].scatter(-5,.5,c='k'); 
+	axarr[1].scatter(-5,.5,c='r');
+	axarr[1].scatter(-5,.5,c='y');
+
+	for i in range(0,a.model.N):
+		bel = [0]*a.model.N;  
+		bel[i] = 1; 
+		grid[0][i] = allActs[i];
+	axarr[1].set_xlim([0,20]); 
+	axarr[1].imshow(grid,extent=[0,a.model.N-1,0,1],cmap='inferno');
+	axarr[1].legend(['Left','Right','Stay']); 
+	axarr[1].set_title('Comparison to MDP policy implementation'); 
+
+	plt.show();
 
 if __name__ == "__main__":
 
