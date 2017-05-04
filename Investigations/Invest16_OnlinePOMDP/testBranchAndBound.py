@@ -1,11 +1,11 @@
 '''
 ######################################################
 
-File: testForwardSearch.py
+File: testBranchAndBound.py
 Author: Luke Burks
 Date: April 2017
 
-Implements the forward search algorithm in 
+Implements the Branch and Bound algorithm in 
 Kochenderfer chapter 6 on the hallway problem
 
 
@@ -24,7 +24,6 @@ from scipy.stats import norm;
 import time; 
 
 
-
 class OnlineSolver():
 
 
@@ -34,7 +33,33 @@ class OnlineSolver():
 		self.model = modelClass();
 		self.solveMDP(); 
 		self.findQ(); 
+		self.UpperU = self.Q; 
+		self.LowerU = self.findLowerBound();  
 
+	def dotProduct(self,a,b):
+		suma = 0; 
+		for i in range(0,len(a)):
+			suma+=a[i]*b[i]; 
+		return suma; 
+
+
+	def findLowerBound(self):
+		alphaLower = [0]*self.model.acts; 
+		for a in range(0,self.model.acts):
+			alphaLower[a] = [min(self.model.R[a])/(1-self.model.discount)]*self.model.N; 
+		for k in range(0,100):
+			for a in range(0,self.model.acts):
+				for s in range(0,self.model.N):
+					alphaLower[a][s] = self.model.R[a][s]; 
+					for sprime in range(0,self.model.N):
+						alphaLower[a][s] += self.model.discount*self.model.px[a][s][sprime]*alphaLower[a][sprime];  
+
+
+		for a in range(0,self.model.acts):
+			for s in range(0,self.model.N):
+				alphaLower[a][s] = alphaLower[a][s] -10000; 
+
+		return alphaLower; 
 
 	def beliefUpdate(self,bel,a,o):
 		belBar = [0]*self.model.N; 
@@ -69,42 +94,12 @@ class OnlineSolver():
 			b[i] = a[i]/suma; 
 		return b; 
 
-	def approximateValueFunction(self,bel):
-
-		U = deepcopy(self.Q[2]); 
-		suma = 0; 
-		for i in range(0,len(bel)):
-			suma += U[i]*bel[i]; 
-
-		return suma; 
-
-	def expectedReward(self,b,a):
-		suma = 0; 
-		for i in range(0,len(b)):
-			suma+=b[i]*self.model.R[a][i]; 
-		return suma; 
 
 	def expectationOfObservation(self,b,o):
 		suma = 0; 
 		for i in range(0,len(b)):
 			suma += b[i]*self.model.pz[o][i]; 
 		return suma; 
-
-
-	def forwardSearch(self,bel,d):
-		if(d==0):
-			return (None,self.approximateValueFunction(bel)); 
-		[astar,ustar] = [None,-100000000000000000000]; 
-
-		for a in range(0,self.model.acts):
-			u = self.expectedReward(bel,a); 
-			for o in range(0,self.model.obs):
-				bprime = self.beliefUpdate(bel,a,o); 
-				[aprime,uprime] = self.forwardSearch(bprime,d-1); 
-				u = u+self.model.discount*self.expectationOfObservation(bel,o)*uprime; 
-			if(u>ustar):
-				[astar,ustar] = [a,u]; 
-		return [astar,ustar]; 
 
 	def solveMDP(self):
 		
@@ -125,9 +120,37 @@ class OnlineSolver():
 				self.Q[a][i] = self.model.R[a][i] + sum(self.V[j]*self.model.px[a][i][j] for j in range(0,self.model.N)); 
 
 
+	def getLowestBound(self,bel):
+		y = [0]*self.model.acts; 
+		for i in range(0,len(y)):
+			y[i] = self.dotProduct(bel,self.LowerU[i]); 
+		return np.argmin(y); 
+		
 
 
-def testForwardSearch():
+	def branchAndBound(self,bel,d):
+		if(d==0):
+			return [None,self.getLowestBound(bel)]
+		[astar,ulower] = [None,-100000000000000]; 
+		for a in range(0,self.model.acts):
+			if(self.dotProduct(self.UpperU[a],bel) < ulower):
+				return [astar,ulower]; 
+			u = self.dotProduct(self.model.R[a],bel); 
+			
+			for o in range(0,self.model.obs):
+				bprime = self.beliefUpdate(bel,a,o); 
+				[aprime,uprimeLower] = self.branchAndBound(bprime,d-1); 
+				u += self.model.discount*self.expectationOfObservation(bel,o)*uprimeLower; 
+			
+		
+
+			if(u >= ulower):
+				[astar,ulower] = [a,u]; 
+		return [astar,ulower]; 
+
+
+
+def testBranchAndBound():
 	a = OnlineSolver();
 
 	allActs = [-1]*a.model.N; 
@@ -136,8 +159,9 @@ def testForwardSearch():
 		bel = [0.001]*a.model.N; 
 		bel[i] = 1; 
 		bel = a.normalize(bel);
-		[allActs[i],allUtils[i]] = a.forwardSearch(bel,3); 
+		[allActs[i],allUtils[i]] = a.branchAndBound(bel,1); 
 
+	print(allActs); 
 	
 	fig,axarr = plt.subplots(2,sharex=True); 
 
@@ -164,6 +188,8 @@ def testForwardSearch():
 
 	plt.show();
 
+
+
 if __name__ == "__main__":
 
-	testForwardSearch(); 
+	testBranchAndBound(); 	
