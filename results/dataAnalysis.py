@@ -2,12 +2,18 @@
 import numpy as np; 
 import copy
 import matplotlib.pyplot as plt
+import sys
+sys.path.append('../src/'); 
+from gaussianMixtures import Gaussian
+from gaussianMixtures import GM
 
-data = np.load('../Results/diffs/D2DiffsModel_Data1.npy').tolist(); 
 
-data2 = np.load('../Results/diffs/D2DiffsModelSoftmax_Data3.npy').tolist(); 
 
-data3 = np.load('../Results/diffs/D2DiffsModel_Data_Greedy3.npy').tolist(); 
+data = np.load('../results/D2Diffs/D2Diffs_Data1.npy').tolist(); 
+
+data2 = np.load('../results/D2DiffsSoftmax/D2DiffsSoftmax_Data1.npy').tolist(); 
+
+data3 = np.load('../results/D2DiffsSoftmax/D2DiffsSoftmax_Data_Greedy1.npy').tolist(); 
 
 
 rewardsReg = data['Rewards']; 

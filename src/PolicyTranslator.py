@@ -162,7 +162,7 @@ class PolicyTranslator:
 		elif(simNum == 1 and not robots):
 			self.runSingleSim(greedySim = self.greedy);
 		elif(not robots):
-			self.runMultiSim(simCount = simNum,greedySim = self.greedy);  
+			self.runMultiSim(simCount = simNum,greedySim = self.greccccccedy);  
 
 
 
@@ -202,12 +202,12 @@ class PolicyTranslator:
 		MAP = bel.findMAPN();
 		
 		if(abs(MAP[0])>abs(MAP[1])):
-			if(MAP[0] > 0):
+			if(MAP[0] < 0):
 				act = 0; 
 			else:
 				act = 1; 
 		else:
-			if(MAP[1] > 0):
+			if(MAP[1] < 0):
 				act = 2; 
 			else:
 				act = 3; 
@@ -331,20 +331,21 @@ class PolicyTranslator:
 		allSimXInd = []; 
 		allSimB = [];  
 		for i in range(0,simCount):
-			inPose = [0 for j in range(0,len(self.delA[0]))];
+			inPose = [0 for k in range(0,len(self.delA[0]))];
 			for j in range(0,len(self.delA[0])):
 				inPose[j] = random.random()*(self.bounds[j][1]-self.bounds[j][0]) + self.bounds[j][0]; 
-
+			inBel = GM(); 
+			inBel.addG(Gaussian(inPose,np.eye(len(self.delA[0])).tolist(),1)); 
 
 			print("Starting simulation: " + str(i+1) + " of " + str(simCount) + " with initial position: " + str(inPose));
-			[allB,allX,allXInd,allAct,allReward] = self.simulate(initialPose = inPose,numSteps = simSteps,greedy=greedySim); 
+			[allB,allX,allXInd,allAct,allReward] = self.simulate(initialPose = inPose,initialBelief = inBel,numSteps = simSteps,greedy=greedySim); 
 			
 			allSimRewards.append(allReward);
 			allSimB.append([allB]); 
 			allSimAct.append([allAct]); 
 			allSimX.append([allX]); 
 			allSimXInd.append([allXInd]); 
-			print("Simulation complete. Reward: " + str(allReward[i-1])); 
+			print("Simulation complete. Reward: " + str(allSimRewards[i-1][simSteps-1])); 
 		
 
 		#save all data
@@ -365,9 +366,10 @@ class PolicyTranslator:
 		inPose = [0 for i in range(0,len(self.delA[0]))];
 		for j in range(0,len(self.delA[0])):
 			inPose[j] = random.random()*self.bounds[j][1] + self.bounds[j][0];  
-			
+		inBel = GM(); 
+		inBel.addG(Gaussian(inPose,np.eye(len(self.delA[0])).tolist(),1)); 
 		#run simulation
-		[allB,allX,allXInd,allAct,allReward] = self.simulate(initialPose = inPose,numSteps = simSteps,greedy=greedySim); 
+		[allB,allX,allXInd,allAct,allReward] = self.simulate(initialPose = inPose,initialBelief=inBel,numSteps = simSteps,greedy=greedySim); 
 		
 		#Show Results
 		fig,ax = plt.subplots(1,sharex=True); 
@@ -610,11 +612,11 @@ def testRolloutPolicy():
 
 if __name__ == "__main__":
 	#args = ['PolicyTranslator.py','-n','D2Diffs','-t','1','-a','1','-g','False'];
-	#a = PolicyTranslator(args); 
+	a = PolicyTranslator(sys.argv); 
 
 	#testGetNextPose(); 
 	
-	testRolloutPolicy(); 
+	#testRolloutPolicy(); 
 
 	
 	

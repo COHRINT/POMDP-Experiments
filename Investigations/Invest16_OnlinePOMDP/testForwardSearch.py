@@ -1,17 +1,3 @@
-'''
-######################################################
-
-File: testForwardSearch.py
-Author: Luke Burks
-Date: April 2017
-
-Implements the forward search algorithm in 
-Kochenderfer chapter 6 on the hallway problem
-
-
-######################################################
-'''
-
 from __future__ import division
 from sys import path
 
@@ -124,7 +110,7 @@ class OnlineSolver():
 			for i in range(0,self.model.N):
 				self.Q[a][i] = self.model.R[a][i] + sum(self.V[j]*self.model.px[a][i][j] for j in range(0,self.model.N)); 
 
-
+ 
 
 
 def testForwardSearch():
