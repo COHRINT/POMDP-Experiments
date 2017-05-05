@@ -18,11 +18,13 @@ import matplotlib.pyplot as plt
 def MDPValueIteration(r,delA,delAVar):
 
 	#Intialize Value function
-	ValueFunc = copy.deepcopy(r); 
+	ValueFunc = copy.deepcopy(r[4]); 
 
-
+	'''
 	for g in ValueFunc.Gs:
 		g.weight = -1000; 
+	'''
+	#ValueFunc.scalerMultiply(1/(.1)); 
 
 	comparision = GM(); 
 	comparision.addG(Gaussian([1,0],[[1,0],[0,1]],1)); 
@@ -49,14 +51,21 @@ def MDPValueIteration(r,delA,delAVar):
 				mean = (np.matrix(g.mean)-np.matrix(delA[a])).tolist(); 
 				var = (np.matrix(g.var) + np.matrix(delAVar)).tolist();
 				suma.addG(Gaussian(mean,var,g.weight));  
-			suma.addGM(r); 
+			suma.addGM(r[a]); 
 			tmpVal = continuousDot(uniform,suma); 
 			if(tmpVal > maxVal):
 				maxVal = tmpVal; 
 				maxGM = copy.deepcopy(suma); 
 
-		maxGM.scalerMultiply(discount); 
-		maxGM = maxGM.kmeansCondensationN(60); 
+		#maxGM.scalerMultiply(.9);
+
+		[x,y,c] = maxGM.plot2D(low=[0,0],high=[5,5],title='Value',vis=False); 
+		plt.contourf(x,y,c); 
+		plt.pause(1);
+
+		#maxGM = maxGM.kmeansCondensationN(10); 
+		maxGM.condense(5)
+
 		ValueFunc = copy.deepcopy(maxGM); 
 
 	return ValueFunc; 
@@ -98,7 +107,7 @@ def getQMDPAction(self,b):
 	act = np.argmax([self.continuousDot(self.Q[j],b) for j in range(0,len(self.Q))]);
 	return act; 
 
-def continuousDot(self,a,b):
+def continuousDot(a,b):
 	suma = 0;  
 
 	if(isinstance(a,np.ndarray)):
@@ -120,6 +129,7 @@ def continuousDot(self,a,b):
 
 def testCMDP():
 	delA = [[-0.5,0],[.5,0],[0,.5],[0,-.5],[0,0]]; 
+	delAVar = [[0.5,0],[0,0.5]]; 
 	r = [0]*5; 
 	for i in range(0,5):
 		r[i] = GM();
@@ -127,11 +137,15 @@ def testCMDP():
 		r[i].addG(Gaussian(m,[[.25,0],[0,.25]],5));    
 		
 		
-		for x in range(-1,6):
-			for y in range(-1,6):
-				r[i].addG(Gaussian([x,y],[[1,0],[0,1]],-1)); 
-		r[i].plot2D(low=[0,0],high=[5,5]);
+		for x in range(-2,8):
+			for y in range(-2,8):
+				r[i].addG(Gaussian([x,y],[[1,0],[0,1]],-2)); 
+		
 
+		#r[i].condense(20); 
+		#r[i].plot2D(low=[0,0],high=[5,5],title='Reward');
+
+	Value = MDPValueIteration(r,delA,delAVar)
 
 
 def testCQMDP():

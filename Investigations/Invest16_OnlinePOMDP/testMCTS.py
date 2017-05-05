@@ -38,11 +38,27 @@ class OnlineSolver():
 		for a in range(0,self.model.acts):
 			tmp = Node(self.T.name + str(a),parent = self.T,value=self.Q0,count=self.N0); 
 		
-		
+		self.exploreParam = -1; 
 
+
+	def beliefUpdate(self,bel,a,o):
+		belBar = [0]*self.model.N; 
+		belNew = [0]*self.model.N; 
+		suma = 0; 
+		for i in range(0,self.model.N):
+			belBar[i] = sum(self.model.px[a][j][i]*bel[j] for j in range(0,self.model.N)); 
+			belNew[i] = self.model.pz[o][i]*belBar[i];
+			suma+=belNew[i];  
+		#normalize
+		for i in range(0,self.model.N):
+			belNew[i] = belNew[i]/suma; 
+
+		return belNew; 
 
 	def MCTS(self,bel,d):
-		h = ''; 
+		h = self.T.name; 
+		for a in range(0,self.model.acts):
+			tmp = Node(self.T.name + str(a),parent = self.T,value=self.Q0,count=self.N0); 
 		numLoops = 100; 
 
 		for i in range(0,numLoops):
@@ -76,7 +92,7 @@ class OnlineSolver():
 				NH[a] = [node.count for node in PreOrderIter(self.T,filter_=lambda n: n.name==h+str(a))][0]; 
 				NodeH[a] = [node for node in PreOrderIter(self.T,filter_=lambda n: n.name==h+str(a))][0]; 
 
-			aprime = np.argmax([QH[a] + .1*np.sqrt(np.log(sum(NH)/NH[a])) for a in range(0,self.model.acts)]);  
+			aprime = np.argmax([QH[a] + self.exploreParam*np.sqrt(np.log(sum(NH)/NH[a])) for a in range(0,self.model.acts)]);  
 
 			[sprime,o,r] = self.generate(s,aprime); 
 			q = r + self.model.discount*self.simulate(sprime,h+str(aprime)+str(o),d-1); 
@@ -108,14 +124,14 @@ class OnlineSolver():
 		reward = 0; 
 		for i in range(0,d):
 			a = np.random.randint(0,self.model.acts); 
-			'''
+			
 			if(s < 13):
 				a = 1; 
 			elif(s>13):
 				a = 0; 
 			else:
 				a = 2; 
-			'''
+			
 			reward += self.model.discount*self.model.R[a][s]; 
 			s = np.random.choice([i for i in range(0,self.model.N)],p=self.model.px[a][s]);
 		return reward; 
@@ -176,10 +192,86 @@ def testMCTS():
 
 	plt.show();
 
+def testMCTSSim():
+	
+	trails = 10; 
+	trailLength = 100; 
+	allReward = np.zeros(shape=(trails,trailLength)).tolist(); 
+
+	for count in range(0,trails):
+		if(trails == 1):
+			fig,ax = plt.subplots();
+		totalReward = 0; 
+
+		a = OnlineSolver(); 
+		b = np.random.rand(a.model.N).tolist(); 
+		x = np.random.randint(0,a.model.N); 
+		b[x] = 3; 
+		b = a.normalize(b); 
+
+		for step in range(0,trailLength):
+			if(trails == 1):
+				ax.cla(); 
+				ax.plot(b,linewidth=4); 
+				ax.scatter(x,.4,s=150,c='r'); 
+				ax.set_ylim([0,.5]); 
+				ax.set_title('POMCP Belief'); 
+				plt.pause(0.1); 
+			[act,u] = a.MCTS(b,3);  
+			totalReward += a.model.R[act][x]; 
+			x = np.random.choice([i for i in range(0,a.model.N)],p=a.model.px[act][x]);
+			ztrial = [0]*len(a.model.pz); 
+			for i in range(0,len(a.model.pz)):
+				ztrial[i] = a.model.pz[i][x]; 
+			z = ztrial.index(max(ztrial)); 
+			b = a.beliefUpdate(b,act,z); 
+
+			a.T = [node for node in PreOrderIter(a.T,filter_=lambda n: n.name==a.T.name+str(act)+str(z))][0];
+			RenderTreeGraph(a.T).to_picture('tree2.png');
+			a.T.parent = None; 
+			#print(a.T); 
+			RenderTreeGraph(a.T).to_picture('tree1.png');
+
+			allReward[count][step] = totalReward;  
+
+		print(allReward[count][-1]); 
+ 	
+ 	averageAllReward = [0]*trailLength; 
+ 	for i in range(0,trails):
+ 		for j in range(0,trailLength):
+ 			averageAllReward[j] += allReward[i][j]/trails; 
+ 	allSigma = [0]*trailLength; 
+
+ 	for i in range(0,trailLength):
+ 		suma = 0; 
+ 		for j in range(0,trails):
+ 			suma += (allReward[j][i] - averageAllReward[i])**2; 
+ 		allSigma[i] = np.sqrt(suma/trails); 
+ 	UpperBound = [0]*trailLength; 
+ 	LowerBound = [0]*trailLength; 
+
+ 	for i in range(0,trailLength):
+ 		UpperBound[i] = averageAllReward[i] + allSigma[i]; 
+ 		LowerBound[i] = averageAllReward[i] - allSigma[i]; 
+
+ 	x = [i for i in range(0,trailLength)]; 
+ 	plt.figure(); 
+ 	plt.plot(x,averageAllReward,'g'); 
+ 	plt.plot(x,UpperBound,'g--'); 
+ 	plt.plot(x,LowerBound,'g--'); 
+ 	plt.fill_between(x,LowerBound,UpperBound,color='g',alpha=0.25); 
+
+ 	plt.xlabel('Time Step'); 
+	plt.ylabel('Accumlated Reward'); 
+	plt.title('Average Accumulated Rewards over Time for: ' + str(trails) + ' simulations'); 
+
+	plt.show(); 
+
+
 if __name__ == "__main__":
 
-	testMCTS(); 
-
+	#testMCTS(); 
+	testMCTSSim(); 
 
 	# f = Node("f")
 	# b = Node("b", parent=f)
