@@ -13,7 +13,7 @@ from math import sqrt
 import signal
 import sys
 import cProfile
-sys.path.append('../src/'); 
+sys.path.append('../../src/'); 
 from gaussianMixtures import Gaussian
 from gaussianMixtures import GM
 import matplotlib.animation as animation
@@ -35,6 +35,11 @@ The "Field of Tall Grass" problem, the cop knows
 where he is, but can't see the robber
 
 Bounds from 0 to 10 on both dimensions 
+
+
+
+HEAVILY MODIFIED. NOT FOR GENERAL USE
+
 ****************************************************
 
 
@@ -55,9 +60,12 @@ class ModelSpec:
 	def __init__(self):
 		self.fileNamePrefix = 'D2Diffs'; 
 		self.walls = []; 
-		self.acts = 5; 
 		self.obs = 5; 
-
+		self.acts = 5; 
+		self.buildTransition(); 
+		self.buildObs(gen=False); 
+		self.buildReward(gen=False); 
+		self.N = 10; 
 
 	#Problem specific
 	def buildTransition(self):
@@ -125,10 +133,10 @@ class ModelSpec:
 				plt.show(); 
 
 
-			f = open("../models/obs/"+ self.fileNamePrefix + "OBS.npy","w"); 
+			f = open("./models/obs/"+ self.fileNamePrefix + "OBS.npy","w"); 
 			np.save(f,self.pz);
 		else:
-			self.pz = np.load("../models/obs/"+ self.fileNamePrefix + "OBS.npy").tolist(); 
+			self.pz = np.load("./models/obs/"+ self.fileNamePrefix + "OBS.npy").tolist(); 
 
 			
 	#Problem Specific
@@ -141,10 +149,10 @@ class ModelSpec:
 			for i in range(0,len(self.r)):
 				self.r[i] = GM();  
 
-			var = (np.identity(2)*.5).tolist(); 
+			var = (np.identity(2)*.25).tolist(); 
 
 			for i in range(0,len(self.r)):
-				self.r[i].addG(Gaussian([-self.delA[i][0],-self.delA[i][1]],var,10));
+				self.r[i].addG(Gaussian([-self.delA[i][0],-self.delA[i][1]],var,100));
 
 			
 
@@ -174,17 +182,17 @@ class ModelSpec:
 				plt.show(); 
 
 
-			f = open("../models/rew/"+ self.fileNamePrefix + "REW.npy","w"); 
+			f = open("./models/rew/"+ self.fileNamePrefix + "REW.npy","w"); 
 			np.save(f,self.r);
 
 		else:
-			self.r = np.load("../models/rew/"+ self.fileNamePrefix + "REW.npy").tolist();
+			self.r = np.load("./models/rew/"+ self.fileNamePrefix + "REW.npy").tolist();
 
 
 if __name__ == '__main__':
 	a = ModelSpec(); 
 	a.buildTransition(); 
-	a.buildReward(gen = True); 
+	a.buildReward(gen = False); 
 	a.buildObs(gen = False); 
 	
 	

@@ -227,10 +227,10 @@ def testMCTSSim():
 			b = a.beliefUpdate(b,act,z); 
 
 			a.T = [node for node in PreOrderIter(a.T,filter_=lambda n: n.name==a.T.name+str(act)+str(z))][0];
-			RenderTreeGraph(a.T).to_picture('tree2.png');
+			#RenderTreeGraph(a.T).to_picture('tree2.png');
 			a.T.parent = None; 
 			#print(a.T); 
-			RenderTreeGraph(a.T).to_picture('tree1.png');
+			#RenderTreeGraph(a.T).to_picture('tree1.png');
 
 			allReward[count][step] = totalReward;  
 
