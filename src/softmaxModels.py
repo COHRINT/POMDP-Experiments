@@ -5,8 +5,7 @@ from __future__ import division
 
 '''
 ***********************************************************
-File: gaussianMixtures.py
-Classes: GM,Gaussian
+File: softmaxModels.py
 
 Allows for the creation, and use of Softmax functions
 
@@ -630,8 +629,8 @@ def test4DSoftmax():
 
 if __name__ == "__main__":
 
-	#test1DSoftmax(); 
-	test2DSoftmax(); 
+	test1DSoftmax(); 
+	#test2DSoftmax(); 
 	#test4DSoftmax(); 
 	
 	
