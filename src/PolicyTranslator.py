@@ -114,16 +114,16 @@ class PolicyTranslator:
 			self.problemName = raw_input();
 
 
-		self.belSave = '../beliefs/' + self.problemName + 'Beliefs' + self.belNum + '.npy'; 
-		alLoad = '../policies/' + self.problemName + 'Alphas' + self.alphaNum + '.npy'; 
-		modelPath = '../models/'+ self.problemName + 'Model'; 
+		self.belSave = os.path.dirname(__file__) + '/' + '../beliefs/' + self.problemName + 'Beliefs' + self.belNum + '.npy'; 
+		alLoad = os.path.dirname(__file__) + '/' + '../policies/' + self.problemName + 'Alphas' + self.alphaNum + '.npy'; 
+		modelPath = os.path.dirname(__file__) + '/' + '../models/'+ self.problemName + 'Model'; 
 		modelName = self.problemName+'Model'; 
 
 
 
 
 		#import the specified model
-		sys.path.append('../models/') 
+		sys.path.append(os.path.dirname(__file__) + '/' + '../models/') 
 		modelModule = __import__(modelName, globals(), locals(), ['ModelSpec'],0); 
 		modelClass = modelModule.ModelSpec;
 
@@ -351,12 +351,12 @@ class PolicyTranslator:
 		#save all data
 		dataSave = {"Beliefs":allSimB,"States":allSimX,"States(Ind)":allSimXInd,"Actions":allSimAct,'Rewards':allSimRewards};
 
-		if(not os.path.isdir('../results/'+self.problemName)):
-			os.mkdir('../results/'+self.problemName); 
+		if(not os.path.isdir(os.path.dirname(__file__) + '/' + '../results/'+self.problemName)):
+			os.mkdir(os.path.dirname(__file__) + '/' + '../results/'+self.problemName); 
 		if(not greedySim):
-			f = open('../results/'+self.problemName+'/' + self.problemName + '_Data' + self.alphaNum +  '.npy','w+'); 
+			f = open(os.path.dirname(__file__) + '/' + '../results/'+self.problemName+'/' + self.problemName + '_Data' + self.alphaNum +  '.npy','w+'); 
 		else:
-			f = open('../results/'+self.problemName+'/' + self.problemName + '_Data_Greedy' + self.alphaNum +  '.npy','w+'); 
+			f = open(os.path.dirname(__file__) + '/' + '../results/'+self.problemName+'/' + self.problemName + '_Data_Greedy' + self.alphaNum +  '.npy','w+'); 
 		np.save(f,dataSave); 
 		f.close(); 
 
@@ -384,7 +384,7 @@ class PolicyTranslator:
 			ax.scatter(allX[i][0],allX[i][1],c='r'); 
 			
 			#grab temp images
-			fig.savefig('../tmp/img'+str(i)+".png",bbox_inches='tight',pad_inches=0)
+			fig.savefig(os.path.dirname(__file__) + '/' + '../tmp/img'+str(i)+".png",bbox_inches='tight',pad_inches=0)
 			plt.pause(.1)
 		
 
@@ -392,19 +392,19 @@ class PolicyTranslator:
 		fig,ax=plt.subplots()
 		images=[]
 		for k in range(0,simSteps):
-			fname='../tmp/img%d.png' %k
+			fname=os.path.dirname(__file__) + '/' + '../tmp/img%d.png' %k
 			img=mgimg.imread(fname)
 			imgplot=plt.imshow(img)
 			plt.axis('off')
 			images.append([imgplot])
 		ani=animation.ArtistAnimation(fig,images,interval=20)
 
-		if(not os.path.isdir('../results/'+self.problemName)):
-			os.mkdir('../results/'+self.problemName); 
+		if(not os.path.isdir(os.path.dirname(__file__) + '/' + '../results/'+self.problemName)):
+			os.mkdir(os.path.dirname(__file__) + '/' + '../results/'+self.problemName); 
 		if(not greedySim):
-			path = '../results/'+self.problemName+'/' + self.problemName + '_Animation' + self.alphaNum +  '.gif'; 
+			path = os.path.dirname(__file__) + '/' + '../results/'+self.problemName+'/' + self.problemName + '_Animation' + self.alphaNum +  '.gif'; 
 		else:
-			path='../results/'+self.problemName+'/' + self.problemName + '_Animation_Greedy' + self.alphaNum + '.gif';
+			path=os.path.dirname(__file__) + '/' + '../results/'+self.problemName+'/' + self.problemName + '_Animation_Greedy' + self.alphaNum + '.gif';
 
 		ani.save(path,fps=2,writer='animation.writer')
 

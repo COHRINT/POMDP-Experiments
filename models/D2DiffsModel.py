@@ -125,10 +125,10 @@ class ModelSpec:
 				plt.show(); 
 
 
-			f = open("../models/obs/"+ self.fileNamePrefix + "OBS.npy","w"); 
+			f = open(os.path.dirname(__file__) + '/' + "../models/obs/"+ self.fileNamePrefix + "OBS.npy","w"); 
 			np.save(f,self.pz);
 		else:
-			self.pz = np.load("../models/obs/"+ self.fileNamePrefix + "OBS.npy").tolist(); 
+			self.pz = np.load(os.path.dirname(__file__) + '/' + "../models/obs/"+ self.fileNamePrefix + "OBS.npy").tolist(); 
 
 			
 	#Problem Specific
@@ -174,11 +174,11 @@ class ModelSpec:
 				plt.show(); 
 
 
-			f = open("../models/rew/"+ self.fileNamePrefix + "REW.npy","w"); 
+			f = open(os.path.dirname(__file__) + '/' + "../models/rew/"+ self.fileNamePrefix + "REW.npy","w"); 
 			np.save(f,self.r);
 
 		else:
-			self.r = np.load("../models/rew/"+ self.fileNamePrefix + "REW.npy").tolist();
+			self.r = np.load(os.path.dirname(__file__) + '/' + "../models/rew/"+ self.fileNamePrefix + "REW.npy").tolist();
 
 
 if __name__ == '__main__':
