@@ -32,7 +32,7 @@ from gaussianMixtures import Gaussian
 from softmaxModels import Softmax
 import numpy as np 
 import matplotlib.pyplot as plt
-
+import time
 
 def likeDiv(like,softClass,x):
 	weights = like.weights; 
@@ -88,22 +88,26 @@ def testVL():
 	#Define Prior
 	prior = GM(); 
 	prior.addG(Gaussian(3,0.25,1)); 
-
+	startTime = time.clock(); 
 	postVL = VL(prior,likelihood,softClass,low,high,res); 
+	timeVL = time.clock()-startTime; 
 	postVB = likelihood.runVB(prior,softClassNum = softClass);
-	 
+	timeVB = time.clock()-timeVL; 
+
+	
+
 	#Normalize postVB
 	#postVB.normalizeWeights(); 
 
 	#share weights
-	postVL[0].weight = postVB[0].weight; 
-
+	#postVL[0].weight = postVB[0].weight; 
+	postVB[0].weight = 1; 
 
 	[x0,classes] = likelihood.plot1D(res = res,vis = False); 
 	[x1,numApprox] = likelihood.numericalProduct(prior,softClass,low=low,high=high,res = res,vis= False); 
 	
 	softClassLabels = ['Far left','Left','Far Right','Right']; 
-	labels = ['likelihood','prior','VB Posterior','VL Posterior','Numerical Posterior']; 
+	labels = ['likelihood','prior','Normed VB Posterior','Normed VL Posterior','Numerical Posterior','Normed True Posterior']; 
 	[x2,pri] = prior.plot(low = low, high = high,num = res,vis = False);
 	[x3,pos] = postVB.plot(low = low, high = high,num = res,vis = False); 
 	[x4,pos2] = postVL.plot(low=low,high=high,num=res,vis=False); 
@@ -112,10 +116,50 @@ def testVL():
 	plt.plot(x3,pos); 
 	plt.plot(x4,pos2); 
 	plt.plot(x1,numApprox); 
-	plt.ylim([0,1.1])
+	plt.ylim([0,3.1])
 	plt.xlim([low,high])
 	plt.title("Fusion of prior with: " + softClassLabels[softClass]); 
-	plt.legend(labels); 
+	
+
+
+	SSE_VL = 0; 
+	SSE_VB = 0; 
+	for i in range(0,len(numApprox)):
+		SSE_VL += (numApprox[i] - pos2[i])**2; 
+		SSE_VB += (numApprox[i] - pos[i])**2; 
+
+	var_VL = postVL.getVars()[0];  
+	var_VB = postVB.getVars()[0];   
+	var_True = 0; 
+	mean_True = 0; 
+
+	mean_True = x1[numApprox.index(max(numApprox))]; 
+	for i in range(0,len(numApprox)):
+		var_True += numApprox[i] * (x1[i] - mean_True)**2; 
+
+	TruePostNorm = GM(); 
+	TruePostNorm.addG(Gaussian(mean_True,var_True,1)); 
+	[x5,postTrue] = TruePostNorm.plot(low=low,high=high,num=res,vis=False); 
+	plt.plot(x5,postTrue); 
+
+	print("Variational Laplace:"); 
+	print("Time: " + str(timeVL)); 
+	print("Mean Error: " + str(postVL.getMeans()[0] - mean_True)); 
+	print("Variance Error: " + str(postVL.getVars()[0] - var_True)); 
+	print("ISD from Normed True: " + str(TruePostNorm.ISD(postVL))); 
+	print(""); 
+
+	print("Variational Bayes:"); 
+	print("Time: " + str(timeVB)); 
+	print("Mean Error: " + str(postVB.getMeans()[0] - mean_True)); 
+	print("Variance Error: " + str(postVB.getVars()[0] - var_True)); 
+	print("ISD from Normed True: " + str(TruePostNorm.ISD(postVB)));
+	print(""); 
+
+	print("Time Ratio (L/B): " + str(timeVL/timeVB)); 
+
+
+	plt.legend(labels);
 	plt.show(); 
 
 
