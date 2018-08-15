@@ -9,12 +9,13 @@ from gaussianMixtures import GM
 
 
 
-data = np.load('../results/D2Diffs/D2Diffs_Data1.npy').tolist(); 
+data = np.load('../results/D2Diffs/D2Diffs_Data1.npy',encoding='latin1').tolist(); 
 
-data2 = np.load('../results/D2DiffsSoftmax/D2DiffsSoftmax_Data1.npy').tolist(); 
+data2 = np.load('../results/D2DiffsSoftmax/D2DiffsSoftmax_Data1.npy',encoding='latin1').tolist(); 
 
-data3 = np.load('../results/D2DiffsSoftmax/D2DiffsSoftmax_Data_Greedy1.npy').tolist(); 
+data3 = np.load('../results/D2DiffsSoftmax/D2DiffsSoftmax_Data_Greedy1.npy',encoding='latin1').tolist(); 
 
+print(data3);
 
 rewardsReg = data['Rewards']; 
 rewardsSoft = data2['Rewards']; 
@@ -123,6 +124,13 @@ for i in range(0,len(rewardsGreedy[0])):
 	UBGreedy[i] = averageAllRewardGreedy[i] + allSigmaGreedy[i]; 
 	LBGreedy[i] = averageAllRewardGreedy[i] - allSigmaGreedy[i]; 
 
+print(averageFinalRewardReg);
+print(averageFinalRewardSoft);
+print(averageFinalRewardGreedy);
+
+print(SigmaReg);
+print(SigmaSoft);
+print(SigmaGreedy);
 
 
 '''
